@@ -18,6 +18,21 @@ spring:
       connection-test-query: select 1
       maximum-pool-size: 10
       auto-commit: true
+  data:
+    redis:
+#      virtual machine IP
+      host: 192.168.33.10
+      port: 6379
+      database: 0
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: 10000ms
+          max-idle: 200
+          min-idle: 5
+      password: foobared
+
 
 
 mybatis-plus:

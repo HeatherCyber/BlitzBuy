@@ -27,4 +27,8 @@ public interface UserService extends IService<User> {
                      HttpServletResponse httpServletResponse);
 
 
+//    根据cookie中已存放的userTicket,到Redis中查询对应的user信息
+    User getUserByCookie(String userTicket,
+                         HttpServletRequest request,
+                         HttpServletResponse response);
 }

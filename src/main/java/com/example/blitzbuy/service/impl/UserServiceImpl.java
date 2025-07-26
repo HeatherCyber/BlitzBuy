@@ -15,6 +15,7 @@ import com.example.blitzbuy.vo.RespBeanEnum;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -34,6 +35,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Resource
     private UserMapper userMapper;
+    @Resource
+    private RedisTemplate redisTemplate;
 
     /**
      * Handles user login authentication
@@ -58,6 +61,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // Extract credentials from request
         String mobile = loginVo.getMobile();
         String password = loginVo.getPassword();
+
+//      优化下面的校验方法：使用自定义注解+全局异常处理器完成用户校验，而不是手写校验方法
 
 //        // Validate required fields
 //        if(!StringUtils.hasText(mobile) || !StringUtils.hasText(password)){
@@ -84,11 +89,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //通过验证后，用户成功登录，同时被分配一个唯一的ticket编号
         String ticket = UUIDUtil.uuid();
         //将ticket-user作为一组key-value保存到session中
-        httpServletRequest.getSession().setAttribute(ticket, user);
+        //httpServletRequest.getSession().setAttribute(ticket, user);
+
+        //为了实现分布式会话管理，把成功登录的用户信息存放到Redis
+        // 存储格式： key (“userTicket:UUID编号”)
+        // 存储格式： value (user对象)
+        redisTemplate.opsForValue().set("userTicket:"+ticket, user);
         //同时将ticket保存到cookie中，使用key-value: "userTicket"-ticket
         CookieUtil.setCookie(httpServletRequest, httpServletResponse, "userTicket", ticket);
 
         // Return success response
         return RespBean.success();
+    }
+
+    @Override
+    public User getUserByCookie(String userTicket, HttpServletRequest request, HttpServletResponse response) {
+
+        //如果usericket不为空，就到Redis中获取user信息
+        if(!StringUtils.hasText(userTicket)){
+            return null;
+        }
+        User user = (User)redisTemplate.opsForValue().get("userTicket:" + userTicket);
+
+        // 如果获取到的user信息不为空，重置cookie，相当于刷新该cookie的生命周期，重新计时
+        if(user != null){
+            CookieUtil.setCookie(request,response,"userTicket", userTicket);
+        }
+        return user;
     }
 }
