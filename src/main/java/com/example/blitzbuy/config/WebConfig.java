@@ -1,0 +1,37 @@
+package com.example.blitzbuy.config;
+
+import jakarta.annotation.Resource;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
+
+/**
+ * @author Heather
+ * @version 1.0
+ */
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Resource
+    private UserArgumentResolver userArgumentResolver;
+
+    //  加载静态资源
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/**").
+                addResourceLocations("classpath:/static/");
+
+    }
+
+//    将自定义的用户参数解析器UserArgumentResolver
+//    加入到HandlerMethodArgumentResolver列表中
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(userArgumentResolver);
+    }
+}

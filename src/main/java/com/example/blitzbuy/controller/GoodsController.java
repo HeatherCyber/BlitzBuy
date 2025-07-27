@@ -25,24 +25,15 @@ public class GoodsController {
     private UserService userService;
 
     //进入商品列表页面
+
+    /**
+     *
+     * @param model
+     * @param user: 通过WebMvcConfigurer解析参数，得到的User对象
+     * @return: String，对应的html页面名称
+     */
     @RequestMapping("/toList")
-//    public String toList(HttpSession session, Model model,
-//                         @CookieValue("userTicket") String ticket){
-
-        public String toList(Model model,
-                             @CookieValue("userTicket") String ticket,
-                             HttpServletRequest request,
-                             HttpServletResponse response){
-        //如果cookie里没有userTicket
-        if(!StringUtils.hasText(ticket)){
-            //重定向到登录页面
-            return "login";
-        }
-        //如果cookie中已经存放了userTicket,取出session中对应的user
-        //User user = (User)session.getAttribute(ticket);
-
-        //注销上一条语句，改用getUserByCookie方法，从Redis中获取user信息
-        User user = userService.getUserByCookie(ticket, request, response);
+    public String toList(Model model, User user){
 
         //如果用户为空，说明没有成功登录
         if(null == user){
