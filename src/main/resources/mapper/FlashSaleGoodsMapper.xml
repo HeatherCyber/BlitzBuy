@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.blitzbuy.mapper.FlashSaleGoodsMapper">
+    <!--    字段映射：通用查询-->
+    <resultMap id="BaseResultMap" type="com.example.blitzbuy.pojo.FlashSaleGoods">
+        <id column="id" property="id"/>
+        <result column="goods_id" property="goodsId"/>
+        <result column="flash_sale_price" property="flashSalePrice"/>
+        <result column="flash_sale_stock" property="flashSaleStock"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="is_active" property="active"/>
+    </resultMap>
+</mapper>

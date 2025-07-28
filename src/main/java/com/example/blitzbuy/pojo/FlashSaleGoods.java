@@ -1,6 +1,7 @@
 package com.example.blitzbuy.pojo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -15,8 +16,8 @@ import java.util.Date;
  * @version 1.0
  */
 @Data
-@TableName("goods")
-public class Goods implements Serializable {
+@TableName("flash_sale_goods")
+public class FlashSaleGoods implements Serializable {
 
     @Serial
     private static final long serialVersionUID=1L;
@@ -24,20 +25,16 @@ public class Goods implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    private String name;
+    private Long goodsId;
 
-    private String imageUrl;
+    private BigDecimal flashSalePrice;
 
-    private BigDecimal price;
+    private Integer flashSaleStock;
 
-    private String description;
+    private Date startTime;
 
-    private Integer stock;
+    private Date endTime;
 
-    private boolean status;
-
-    private Date createTime;
-
-    private Date updateTime;
-
+    @TableField("is_active")
+    private boolean active;
 }

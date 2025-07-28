@@ -20,6 +20,7 @@ spring:
       auto-commit: true
   data:
     redis:
+#      virtual machine IP
       host: 192.168.33.10
       port: 6379
       database: 0

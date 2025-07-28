@@ -1,6 +1,7 @@
 package com.example.blitzbuy.controller;
 
 import com.example.blitzbuy.pojo.User;
+import com.example.blitzbuy.service.GoodsService;
 import com.example.blitzbuy.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class GoodsController {
 
     @Resource
-    private UserService userService;
+    private GoodsService goodsService;
+
 
     //进入商品列表页面
 
@@ -41,6 +43,8 @@ public class GoodsController {
         }
         //如果用户存在，把user对象放入model, 携带给下一个模版使用
         model.addAttribute("user", user);
+        //把促销的商品列表也放入到model中
+        model.addAttribute("goodsList", goodsService.getGoodsVo());
         //返回商品列表页面
         return "goodsList";
     }
