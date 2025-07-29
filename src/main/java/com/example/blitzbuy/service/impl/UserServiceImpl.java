@@ -42,8 +42,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * Handles user login authentication
      *
      * @param loginVo Contains login credentials (mobile and password)
-     * @param httpServletRequest Servlet request object
-     * @param httpServletResponse Servlet response object
+     * @param request Servlet request object
+     * @param response Servlet response object
      * @return RespBean containing authentication result with:
      *         - SUCCESS status and data when authenticated
      *         - ERROR status with specific error code when failed
@@ -56,10 +56,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * 5. Returns appropriate response
      */
     @Override
-    public RespBean doLogin(LoginVo loginVo, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-
+    public RespBean doLogin(LoginVo loginVo,
+                            HttpServletRequest request,
+                            HttpServletResponse response) {
+                                
         // Extract credentials from request
-        String mobile = loginVo.getMobile();
+        String id = loginVo.getMobile();
         String password = loginVo.getPassword();
 
 //      优化下面的校验方法：使用自定义注解+全局异常处理器完成用户校验，而不是手写校验方法
@@ -74,13 +76,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 //            return RespBean.error(RespBeanEnum.MOBILE_ERROR);
 //        }
 
+        
         // Check user existence
-        User user = userMapper.selectById(mobile);
-        if(null == user){
+        User user = userMapper.selectById(id);
+        if(user == null){
 //            return RespBean.error(RespBeanEnum.LOGIN_ERROR);
             throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
         }
-
+        System.out.println("Validate password");
         //Validate password
         if(!MD5Util.midPassToDBPass(password, user.getSalt()).equals(user.getPassword())){
             return RespBean.error(RespBeanEnum.LOGIN_ERROR);
@@ -91,12 +94,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //将ticket-user作为一组key-value保存到session中
         //httpServletRequest.getSession().setAttribute(ticket, user);
 
+        System.out.println("使用redisTemplate");
         //为了实现分布式会话管理，把成功登录的用户信息存放到Redis
         // 存储格式： key (“userTicket:UUID编号”)
         // 存储格式： value (user对象)
         redisTemplate.opsForValue().set("userTicket:"+ticket, user);
+        System.out.println("使用redisTemplate finished ");
         //同时将ticket保存到cookie中，使用key-value: "userTicket"-ticket
-        CookieUtil.setCookie(httpServletRequest, httpServletResponse, "userTicket", ticket);
+        CookieUtil.setCookie(request, response, "userTicket", ticket);
 
         // Return success response
         return RespBean.success();

@@ -287,9 +287,9 @@
         var str = "" + salt.charAt(0) + inputPass + salt.charAt(6);
         var password = md5(str);
 
-        // console.log("inputPass->", inputPass)
-        // console.log("salt->", salt)
-        // console.log("password->", password)
+        console.log("inputPass->", inputPass)
+        console.log("salt->", salt)
+        console.log("password->", password)
 
         $.ajax({
             url: "/login/doLogin",
@@ -299,8 +299,8 @@
                 password: password
             },
             success: function (data) {
-                if (data.code == 200) {
-                    // alert(data.message)
+                if (data.code === 200) {
+                    //alert(data.message)
                     //如果code是200,说明登录成功., 就直接进入到商品列表页
                     window.location.href = "/goods/toList"
                 } else {
@@ -308,7 +308,7 @@
                 }
             },
             error: function () {
-                alert("失败");
+                alert("Login Failed.");
             }
         });
     }

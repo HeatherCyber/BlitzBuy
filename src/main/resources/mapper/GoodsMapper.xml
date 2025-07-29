@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.blitzbuy.mapper.GoodsMapper">
-<!--    字段映射：通用查询-->
+<!--    Goods字段映射：通用查询-->
     <resultMap id="BaseResultMap" type="com.example.blitzbuy.pojo.Goods">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
@@ -15,19 +15,44 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+<!--    GoodsVo字段映射：通用查询-->
+    <resultMap id="GoodsVo" type="com.example.blitzbuy.vo.GoodsVo">
+    <!-- Goods 基本字段 -->
+    <id column="id" property="id"/>
+    <result column="name" property="name"/>
+    <result column="image_url" property="imageUrl"/>
+    <result column="description" property="description"/>
+    <result column="price" property="price"/>
+    <result column="stock" property="stock"/>
+    <result column="status" property="status"/>
+    <result column="create_time" property="createTime"/>
+    <result column="update_time" property="updateTime"/>
+
+    <!-- GoodsVo 新增字段 -->
+    <result column="flash_sale_price" property="flashSalePrice"/>
+    <result column="flash_sale_stock" property="flashSaleStock"/>
+    <result column="start_time" property="startTime"/>
+    <result column="end_time" property="endTime"/>
+</resultMap>
+
 <!--    MySQL查询语句-->
-    <select id="getGoodsVo" resultMap="com.example.blitzbuy.vo.GoodsVo">
-        SELECT goods.id,
-               goods.name,
-               goods.image_url,
-               goods.description,
-               goods.price,
-               goods.stock,
-               flash_sale_goods.flash_sale_price,
-               flash_sale_goods.flash_sale_stock,
-               flash_sale_goods.start_time,
-               flash_sale_goods.end_time
-        FROM goods LEFT JOIN flash_sale_goods
-            ON goods.id = flash_sale_goods.goods_id;
+    <select id="getGoodsVo" resultMap="GoodsVo">
+        SELECT g.id,
+               g.name,
+               g.image_url,
+               g.description,
+               g.price,
+               g.stock,
+               g.status, 
+               g.create_time, 
+               g.update_time,
+               fsg.flash_sale_price,
+               fsg.flash_sale_stock,
+               fsg.start_time,
+               fsg.end_time
+        FROM goods g
+        LEFT JOIN flash_sale_goods fsg ON g.id = fsg.goods_id
+        WHERE fsg.id IS NOT NULL 
+        AND fsg.is_active = 1;
         </select>
 </mapper>

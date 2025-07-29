@@ -25,16 +25,14 @@ public class GoodsController {
     @Resource
     private GoodsService goodsService;
 
-
     //进入商品列表页面
-
     /**
      *
      * @param model
      * @param user: 通过WebMvcConfigurer解析参数，得到的User对象
      * @return: String，对应的html页面名称
      */
-    @RequestMapping("/toList")
+    @RequestMapping("toList")
     public String toList(Model model, User user){
 
         //如果用户为空，说明没有成功登录

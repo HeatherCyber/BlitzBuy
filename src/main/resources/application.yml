@@ -42,8 +42,14 @@ mybatis-plus:
   mapper-locations: classpath*:/mapper/*Mapper.xml
   type-aliases-package: com.example.blitzbuy.pojo
 
+
 logging:
   level:
-    com.example.blitzbuy.mapper: debug
-#    org.springframework: DEBUG
-#    org.mybatis: DEBUG
+    root: info
+    org.springframework.jdbc: debug  # JDBC 底层日志
+    org.mybatis: debug
+    com.baomidou.mybatisplus: trace # MyBatis-Plus 全量日志
+    com.example.blitzbuy.mapper: trace
+    java.sql: debug                 # 显示JDBC连接细节
+    java.sql.Statement: debug
+    java.sql.PreparedStatement: debug

@@ -134,16 +134,16 @@
 
     <table class="table" id="goodslist">
         <tr>
-            <td>Name</td>
+            <td>Product Name</td>
             <td>Image</td>
-            <td>Origin Price</td>
+            <td>Regular Price</td>
             <td>Flash Sale Price</td>
-            <td>Flash Sale Stock</td>
-            <td>More</td>
+            <td>Stock Left</td>
+            <td>Details</td>
         </tr>
         <tr th:each="goods,goodstStat : ${goodsList}">
             <td th:text="${goods.name}"></td>
-            <td><img th:src="@{${goods.imgUrl}}" width="100" height="100"/>
+            <td><img th:src="@{${goods.imageUrl}}" width="100" height="100"/>
             </td>
             <td th:text="${goods.price}"></td>
             <td th:text="${goods.flashSalePrice}"></td>

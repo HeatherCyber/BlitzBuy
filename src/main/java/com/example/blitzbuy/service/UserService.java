@@ -23,8 +23,8 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface UserService extends IService<User> {
 
     RespBean doLogin(LoginVo loginVo,
-                     HttpServletRequest httpServletRequest,
-                     HttpServletResponse httpServletResponse);
+                     HttpServletRequest request,
+                     HttpServletResponse response);
 
 
 //    根据cookie中已存放的userTicket,到Redis中查询对应的user信息
