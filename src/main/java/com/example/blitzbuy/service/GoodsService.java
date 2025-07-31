@@ -13,4 +13,7 @@ import java.util.List;
 public interface GoodsService extends IService<Goods> {
 //    返回促销商品的信息列表
     List<GoodsVo> getGoodsVo();
+//    获取指定的商品详情--根据商品id
+    GoodsVo getGoodsVoByGoodsId(Long goodsId);
+  
 }

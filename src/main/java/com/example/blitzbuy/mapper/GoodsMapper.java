@@ -13,4 +13,7 @@ import java.util.List;
 public interface GoodsMapper extends BaseMapper<Goods> {
 //    获取参与抢购活动的商品列表
     List<GoodsVo> getGoodsVo();
+// 获取指定的商品详情--根据商品id
+    GoodsVo getGoodsVoByGoodsId(Long goodsId);
+
 }

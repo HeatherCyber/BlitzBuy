@@ -126,11 +126,11 @@
         <table class="table" id="order">
             <tr>
                 <td>名称</td>
-                <td id="goodName" colspan="3" th:text="${goods.goodsName}"></td>
+                <td id="goodName" colspan="3" th:text="${goods.name}"></td>
             </tr>
             <tr>
                 <td>图片</td>
-                <td colspan="2"><img id="goodImg" width="200" th:src="@{${goods.goodsImg}}"
+                <td colspan="2"><img id="goodImg" width="200" th:src="@{${goods.imageUrl}}"
                                      height="200"/></td>
             </tr>
             <tr>

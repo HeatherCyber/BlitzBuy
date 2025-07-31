@@ -3,7 +3,7 @@
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>商品详情</title>
+    <title>BlitzBuy</title>
     <!--jquery-->
     <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
     <!-- bootstrap -->
@@ -84,11 +84,11 @@
 <body>
 
 
-<!--抽取头部公共页面-->
+<!--Extract common header page-->
 <header id="site-header" class="main-header">
     <!-- Logo -->
     <a class="logo" onclick="toList()">
-        <span class="logo-lg"><b>商品抢购</b></span>
+        <span class="logo-lg"><b>BlitzBuy</b></span>
     </a>
 
     <nav class="navbar navbar-static-top">
@@ -122,7 +122,7 @@
                         </li>
                         <li class="user-footer">
                             <div class="pull-middle">
-                                <a onclick="toOut()" class="btn btn-lg btn-default btn-block">退出系统</a>
+                                <a onclick="toOut()" class="btn btn-lg btn-default btn-block">Logout</a>
                             </div>
                         </li>
                     </ul>
@@ -133,66 +133,66 @@
 </header>
 
 <div class="panel panel-default">
-    <div class="panel-heading" style="background: #c9302c;color: white">秒杀商品详情</div>
+    <div class="panel-heading" style="background: #c9302c;color: white">Flash Sale Product Details</div>
     <div class="panel-body">
-        <span th:if="${user eq null}"> 您还没有登录，请登陆后再操作<br/></span>
-        <span>production参数</span>
+        <span th:if="${user eq null}"> You are not logged in. Please login to continue.<br/></span>
+        <span>Production Parameters</span>
     </div>
     <div class="container">
 
         <table class="table" id="good">
             <tr>
-                <td>名称</td>
-                <td colspan="3" id="goodName" th:text="${goods.goodsName}"></td>
+                <td>Product Name</td>
+                <td colspan="3" id="goodName" th:text="${goods.name}"></td>
             </tr>
             <tr>
-                <td>图片</td>
-                <td colspan="3"><img id="goodImg" th:src="@{${goods.goodsImg}}" width="200"
+                <td>Image</td>
+                <td colspan="3"><img id="goodImg" th:src="@{${goods.imageUrl}}" width="200"
                                      heights="200"/></td>
             </tr>
 
             <tr>
-                <td>秒杀开始时间</td>
-                <td id="startTime" th:text="${#dates.format(goods.startDate,'yyyy-MM-dd HH:mm:ss')}"></td>
-                <td id="seckillTip">
+                <td>Flash Sale Status</td>
+                <!-- <td id="startTime" th:text="${#dates.format(goods.startTime,'yyyy-MM-dd HH:mm:ss')}"></td> -->
+                <td id="flashSaleTip">
+                    <input type="hidden" id="flashSaleStatus" th:value="${flashSaleStatus}"/>
                     <input type="hidden" id="remainSeconds" th:value="${remainSeconds}"/>
-                    <span th:if="${secKillStatus eq 0}">秒杀倒计时：<span id="countDown" th:text="${remainSeconds}"> </span>秒</span>
-                    <span th:if="${secKillStatus eq 1}">秒杀进行中</span>
-                    <span th:if="${secKillStatus eq 2}">秒杀已结束</span>
+                    <input type="hidden" id="endTime" th:value="${goods.endTime}"/>
+                    <span id="statusDisplay"></span>
                 </td>
                 <td>
-                        <form id="secKillForm" method="post" action="/seckill/doSeckill">
+                        <form id="flashSaleForm" method="post" action="/flashSale/doFlashSale">
                             <input type="hidden" id="goodsId" name="goodsId" th:value="${goods.id}">
-                            <button class="btn btn-primary btn-block" type="submit" id="buyButton">抢购</button>
+                            <button class="btn btn-primary btn-block" type="submit" id="buyButton">Buy Now</button>
                         </form>
 
-<!--                    &lt;!&ndash; 对应秒杀v6.0后台 隐藏秒杀接口&ndash;&gt;-->
+<!--                    &lt;!&ndash; Corresponds to flash sale v6.0 backend hidden interface&ndash;&gt;-->
 <!--                    <input type="hidden" id="goodsId" name="goodsId" th:value="${goods.id}">-->
-<!--                    <button class="btn btn-primary btn-block" type="submit" onclick="getSecKillPath()" id="buyButton">-->
-<!--                        立即秒杀-->
+<!--                    <button class="btn btn-primary btn-block" type="submit" onclick="getFlashSalePath()" id="buyButton">-->
+<!--                        Buy Now-->
 <!--                    </button>-->
                 </td>
             </tr>
 
             <tr>
-                <td>秒杀价</td>
-                <td id="secKillPrice" th:text="${goods.seckillPrice}"></td>
+                <td>Flash Sale Price</td>
+                <td id="flashSalePrice" th:text="${goods.flashSalePrice}"></td>
                 <td>
-                    <!--显示验证码-->
+                    <!--Display captcha-->
                     <img id="captchaImg" class="captchaImg"/></td>
                 <td>
-                    <!--输入框,可以输入验证码-->
+                    <!--Input field for captcha-->
                     <input id="captcha" class="captchaImg"/>
-                    <input type="button" id="captchabtn" onclick="verifyCaptcha()" value="验证输入的验证码是否正确">
+                    <input type="button" id="captchabtn" onclick="verifyCaptcha()" value="Verify Captcha">
                 </td>
             </tr>
             <tr>
-                <td>原价</td>
-                <td colspan="3" id="goodPrice" th:text="${goods.goodsPrice}"></td>
+                <td>Original Price</td>
+                <td colspan="3" id="goodPrice" th:text="${goods.price}"></td>
             </tr>
             <tr>
-                <td>库存</td>
-                <td colspan="3" id="stockCount" th:text="${goods.stockCount}"></td>
+                <td>Flash Sale Stock</td>
+                <td colspan="3" id="stockCount" th:text="${goods.flashSaleStock}"></td>
             </tr>
         </table>
     </div>
@@ -200,47 +200,132 @@
 </body>
 <script>
     $(function () {
-        countDown(); //会执行countDown()
+        //Initialize status display based on flashSaleStatus
+        var flashSaleStatus = $("#flashSaleStatus").val();
+        if (flashSaleStatus == 0) {
+            //Not started yet
+            var initialSeconds = $("#remainSeconds").val();
+            $("#statusDisplay").html("Starts in: <span id='countDown'>" + formatTime(initialSeconds) + "</span>");
+            $("#buyButton").hide(); //Hide button when not started
+        } else if (flashSaleStatus == 1) {
+            //In progress
+            var endTimeRemaining = getEndTimeRemaining();
+            updateFlashSaleStatus(endTimeRemaining);
+            $("#buyButton").show(); //Show button when in progress
+        } else if (flashSaleStatus == 2) {
+            //Ended
+            $("#statusDisplay").html("Ended");
+            $("#buyButton").hide(); //Hide button when ended
+        }
+        countDown(); //Execute countDown()
     });
 
     function countDown() {
-        //获取剩余时间
-        var remainSeconds = $("#remainSeconds").val();
-        var timeout; //定时器/计时器
-        //秒杀还未开始
-        if (remainSeconds > 0) {
-            $("#buyButton").attr("disabled", true);//抢购的按钮设置成不可用
-            timeout = setTimeout(function () {
-                $("#countDown").text(remainSeconds - 1);
-                $("#remainSeconds").val(remainSeconds - 1);
-                countDown();
-            }, 1000);
-        } else if (remainSeconds == 0) {//秒杀进行中
-            $("#buyButton").attr("disabled", false);
-            if (timeout) {//清空计时器
-                clearTimeout(timeout);
+        //Get flash sale status
+        var flashSaleStatus = $("#flashSaleStatus").val();
+        var timeout; //Timer/counter
+        
+        if (flashSaleStatus == 0) {
+            //Flash sale hasn't started yet
+            var remainSeconds = $("#remainSeconds").val();
+            if (remainSeconds > 0) {
+                $("#buyButton").hide(); //Hide buy button
+                timeout = setTimeout(function () {
+                    var newRemainSeconds = remainSeconds - 1;
+                    var formattedTime = formatTime(newRemainSeconds);
+                    $("#countDown").text(formattedTime);
+                    $("#remainSeconds").val(newRemainSeconds);
+                    if (newRemainSeconds == 0) {
+                        //Transition to flash sale in progress
+                        $("#flashSaleStatus").val(1);
+                        var endTimeRemaining = getEndTimeRemaining();
+                        updateFlashSaleStatus(endTimeRemaining);
+                        $("#buyButton").show(); //Show button when flash sale starts
+                    }
+                    countDown();
+                }, 1000);
             }
-            $("#seckillTip").html("秒杀进行中");
+        } else if (flashSaleStatus == 1) {
+            //Flash sale in progress
+            $("#buyButton").show(); //Show buy button
+            
+            //Start countdown to end time
+            var endTimeRemaining = getEndTimeRemaining();
+            if (endTimeRemaining > 0) {
+                //Update display immediately
+                updateFlashSaleStatus(endTimeRemaining);
+                
+                //Continue countdown
+                timeout = setTimeout(function () {
+                    var newEndTimeRemaining = endTimeRemaining - 1;
+                    updateFlashSaleStatus(newEndTimeRemaining);
+                    if (newEndTimeRemaining > 0) {
+                        countDown();
+                    } else {
+                        //Flash sale ended
+                        $("#flashSaleStatus").val(2);
+                        $("#statusDisplay").html("Ended");
+                        $("#buyButton").hide(); //Hide button when flash sale ends
+                    }
+                }, 1000);
+            } else {
+                //Flash sale ended
+                $("#flashSaleStatus").val(2);
+                $("#statusDisplay").html("Ended");
+                $("#buyButton").hide(); //Hide button when flash sale ends
+            }
 
-            //在秒杀进行中的状态下, 请求验证码,并显示(默认情况下该验证码图片是不显示的)
-            $("#captchaImg").attr("src", "/seckill/captcha?goodsId=" + $("#goodsId").val());
+            //Request captcha and display when flash sale is in progress (captcha image is hidden by default)
+            $("#captchaImg").attr("src", "/flashSale/captcha?goodsId=" + $("#goodsId").val());
             $("#captchaImg").show();
-            //显示输入框
+            //Show input field
             $("#captcha").show();
 
-        } else {
-            $("#buyButton").attr("disabled", true);//抢购的按钮设置成不可用
-            $("#seckillTip").html("秒杀已结束");
+        } else if (flashSaleStatus == 2) {
+            //Flash sale ended
+            $("#buyButton").hide(); //Hide buy button
+            $("#statusDisplay").html("Ended");
         }
     }
 
-    //通过隐藏秒杀接口的方式,秒杀商品
-    function getSecKillPath() {
+    //Format seconds to HH:MM:SS
+    function formatTime(seconds) {
+        var hours = Math.floor(seconds / 3600);
+        var minutes = Math.floor((seconds % 3600) / 60);
+        var secs = seconds % 60;
+        
+        return (hours < 10 ? "0" : "") + hours + ":" + 
+               (minutes < 10 ? "0" : "") + minutes + ":" + 
+               (secs < 10 ? "0" : "") + secs;
+    }
+
+    //Get remaining time until flash sale ends
+    function getEndTimeRemaining() {
+        //This should be calculated based on your backend data
+        //For now, we'll use a placeholder - you should replace this with actual logic
+        var endTime = new Date($("#endTime").val()).getTime() / 1000; //Get end time from hidden field
+        var currentTime = Math.floor(Date.now() / 1000);
+        return Math.max(0, endTime - currentTime);
+    }
+
+    //Update flash sale status based on remaining time
+    function updateFlashSaleStatus(remainingTime) {
+        if (remainingTime > 0) {
+            $("#statusDisplay").html("Ends in: <span id='countDown'>" + formatTime(remainingTime) + "</span>");
+        } else {
+            $("#flashSaleStatus").val(2);
+            $("#statusDisplay").html("Ended");
+            $("#buyButton").hide(); //Hide button when flash sale ends
+        }
+    }
+
+    //Get flash sale path through hidden interface
+    function getFlashSalePath() {
         var goodsId = $("#goodsId").val();
-        //获取用户输入的验证码
+        //Get user input captcha
         var captcha = $("#captcha").val();
         $.ajax({
-            url: "/seckill/path",
+            url: "/flashSale/path",
             type: "GET",
             data: {
                 goodsId: goodsId,
@@ -248,38 +333,38 @@
             },
             success: function (data) {
                 if (data.code == 200) {
-                    //取出服务器返回的随机生成的路径
+                    //Extract the randomly generated path from server response
                     var path = data.obj;
-                    //真正的秒杀方法
-                    doSecKill(path);
+                    //Execute flash sale method
+                    doFlashSale(path);
                 } else {
                     layer.msg(data.message);
                 }
             },
             error: function () {
-                layer.msg("客户端请求错误");
+                layer.msg("Client request error");
             }
         })
     }
 
-    //携带秒杀生成的路径, 秒杀商品
-    function doSecKill(path) {
+    //Execute flash sale with generated path
+    function doFlashSale(path) {
         $.ajax({
-            //一定要注意路径的大小写问题,否则报404
-            url: '/seckill/' + path + '/doSeckill',
+            //Pay attention to path case sensitivity to avoid 404 errors
+            url: '/flashSale/' + path + '/doFlashSale',
             type: 'POST',
             data: {
                 goodsId: $("#goodsId").val()
             },
             success: function (data) {
                 if (data.code == 200) {
-                    layer.msg("秒杀结果" + data.message);
+                    layer.msg("Flash sale result: " + data.message);
                 } else {
                     layer.msg(data.message);
                 }
             },
             error: function () {
-                layer.msg("客户端请求错误！", {time: 2000});
+                layer.msg("Client request error!", {time: 2000});
             }
         });
     }

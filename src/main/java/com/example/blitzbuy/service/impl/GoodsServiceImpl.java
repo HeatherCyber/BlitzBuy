@@ -26,4 +26,10 @@ public class GoodsServiceImpl
     public List<GoodsVo> getGoodsVo() {
         return goodsMapper.getGoodsVo();
     }
+
+    @Override
+    public GoodsVo getGoodsVoByGoodsId(Long goodsId) {
+        return goodsMapper.getGoodsVoByGoodsId(goodsId);
+    }
+
 }

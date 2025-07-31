@@ -35,7 +35,7 @@
     <result column="end_time" property="endTime"/>
 </resultMap>
 
-<!--    MySQL查询语句-->
+<!--   getGoodsVo()方法的查询语句-->
     <select id="getGoodsVo" resultMap="GoodsVo">
         SELECT g.id,
                g.name,
@@ -55,4 +55,24 @@
         WHERE fsg.id IS NOT NULL 
         AND fsg.is_active = 1;
         </select>
+
+<!--    getGoodsVoByGoodsId(goodsId)方法的查询语句-->
+    <select id="getGoodsVoByGoodsId" resultMap="GoodsVo">
+        SELECT g.id,
+               g.name,
+               g.image_url,
+               g.description,
+               g.price,
+               g.stock,
+               g.status, 
+               g.create_time, 
+               g.update_time,
+               fsg.flash_sale_price,
+               fsg.flash_sale_stock,
+               fsg.start_time,
+               fsg.end_time
+        FROM goods g
+        LEFT JOIN flash_sale_goods fsg ON g.id = fsg.goods_id
+        WHERE g.id = #{goodsId};
+    </select>
 </mapper>
