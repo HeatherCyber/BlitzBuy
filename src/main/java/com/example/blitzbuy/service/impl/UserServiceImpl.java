@@ -83,7 +83,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 //            return RespBean.error(RespBeanEnum.LOGIN_ERROR);
             throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
         }
-        System.out.println("Validate password");
         //Validate password
         if(!MD5Util.midPassToDBPass(password, user.getSalt()).equals(user.getPassword())){
             return RespBean.error(RespBeanEnum.LOGIN_ERROR);

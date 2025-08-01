@@ -1,7 +1,7 @@
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>订单详情</title>
+    <title>Order Detail</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <!--jquery-->
     <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
@@ -76,7 +76,7 @@
 <header id="site-header" class="main-header">
     <!-- Logo -->
     <a class="logo" onclick="toList()">
-        <span class="logo-lg"><b>商品抢购</b></span>
+        <span class="logo-lg"><b>BlitzBuy</b></span>
     </a>
 
     <nav class="navbar navbar-static-top">
@@ -110,7 +110,7 @@
                         </li>
                         <li class="user-footer">
                             <div class="pull-middle">
-                                <a onclick="toList()" class="btn btn-lg btn-default btn-block">退出系统</a>
+                                <a onclick="toList()" class="btn btn-lg btn-default btn-block">Logout</a>
                             </div>
                         </li>
                     </ul>
@@ -121,50 +121,50 @@
 </header>
 
 <div class="panel panel-default">
-    <div class="panel-heading" style="background: #c9302c;color: white">秒杀订单详情</div>
+    <div class="panel-heading" style="background: #c9302c;color: white">Order Detail</div>
     <div class="container">
         <table class="table" id="order">
             <tr>
-                <td>名称</td>
+                <td>Product Name</td>
                 <td id="goodName" colspan="3" th:text="${goods.name}"></td>
             </tr>
             <tr>
-                <td>图片</td>
+                <td>Image</td>
                 <td colspan="2"><img id="goodImg" width="200" th:src="@{${goods.imageUrl}}"
                                      height="200"/></td>
             </tr>
             <tr>
-                <td>订单价格</td>
+                <td>Order Price</td>
                 <td colspan="2" id="goodPrice" th:text="${order.goodsPrice}"></td>
             </tr>
             <tr>
-                <td>下单时间</td>
-                <td id="createDate" colspan="2" th:text="${#dates.format(order.createDate,'yyyy-MM-dd HH:mm:ss')}"></td>
+                <td>Order Time</td>
+                <td id="createDate" colspan="2" th:text="${#dates.format(order.createTime,'yyyy-MM-dd HH:mm:ss')}"></td>
             </tr>
             <tr>
-                <td>订单状态</td>
+                <td>Order Status</td>
                 <td id="status" >
-                    <span th:if="${order.status eq 0}">未支付</span>
-                    <span th:if="${order.status eq 1}">代发货</span>
-                    <span th:if="${order.status eq 2}">已发货</span>
-                    <span th:if="${order.status eq 3}">已收货</span>
-                    <span th:if="${order.status eq 4}">已退款</span>
-                    <span th:if="${order.status eq 5}">已完成</span>
+                    <span th:if="${order.orderStatus eq 0}">Unpaid</span>
+                    <span th:if="${order.orderStatus eq 1}">Pending</span>
+                    <span th:if="${order.orderStatus eq 2}">Shipped</span>
+                    <span th:if="${order.orderStatus eq 3}">Received</span>
+                    <span th:if="${order.orderStatus eq 4}">Refunded</span>
+                    <span th:if="${order.orderStatus eq 5}">Completed</span>
 
                 </td>
                 <td>
                     <button class="btn btn-primary btn-block" type="submit"
-                            id="payButton">立即支付
+                            id="payButton">Pay Now
                     </button>
                 </td>
             </tr>
             <tr>
-                <td>收货人</td>
-                <td colspan="2">XXX 13300000000</td>
+                <td>Receiver</td>
+                <td colspan="2" th:text="${order.goodsId}"></td>
             </tr>
             <tr>
-                <td>收货地址</td>
-                <td colspan="2">北京市幸福小区6单元101号</td>
+                <td>Delivery Address</td>
+                <td colspan="2" th:text="${order.deliveryAddress}"></td>
             </tr>
         </table>
     </div>
