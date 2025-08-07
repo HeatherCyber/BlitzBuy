@@ -15,7 +15,7 @@ import org.springframework.util.StringUtils;
  * conforms to a valid mobile phone number format. The validation behavior
  * can be configured through the {@link IsMobile} annotation parameters.
  */
-//我们自拟定注解IsMobile 的校验规则
+// Our custom validation rules for the IsMobile annotation
 public class IsMobileValidator implements ConstraintValidator<IsMobile, String> {
 
     private boolean required = false;

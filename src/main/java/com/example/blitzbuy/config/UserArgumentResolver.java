@@ -27,23 +27,23 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
     /**
      *
      * @param parameter
-     * @return: 只有返回true时，才会执行下面的resolveArgument()方法
+     * @return: Only when returning true will the resolveArgument() method below be executed
      */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-//        获取参数类型
+//        Get parameter type
         Class<?> parameterType = parameter.getParameterType();
-//        判断参数是否为User
+//        Check if parameter is User
         return parameterType == User.class;
     }
 
     /**
-     * 此方法类似拦截器，自定义解析机制
+     * This method is similar to an interceptor, custom resolution mechanism
      * @param parameter
      * @param mavContainer
      * @param webRequest
      * @param binderFactory
-     * @return: 返回一个User对象
+     * @return: Returns a User object
      * @throws Exception
      */
     @Override

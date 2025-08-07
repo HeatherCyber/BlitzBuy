@@ -8,11 +8,11 @@ import com.example.blitzbuy.vo.GoodsVo;
 /**
  * @author Heather
  * @version 1.0
- * 订单Service接口
+ * Order Service Interface
  */
 public interface OrderService extends IService<Order> {
 
-// 创建秒杀订单
+// Create flash sale order
     Order creatFlashSaleOrder(User user, GoodsVo goodsVo);
     
 } 

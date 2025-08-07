@@ -6,7 +6,7 @@ import com.example.blitzbuy.pojo.FlashSaleOrder;
 /**
  * @author Heather
  * @version 1.0
- * 秒杀订单Service接口
+ * Flash Sale Order Service Interface
  */
 public interface FlashSaleOrderService extends IService<FlashSaleOrder>{
 

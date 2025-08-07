@@ -11,9 +11,9 @@ import java.util.List;
  * @version 1.0
  */
 public interface GoodsService extends IService<Goods> {
-//    返回促销商品的信息列表
+//    Return promotional goods information list
     List<GoodsVo> getGoodsVo();
-//    获取指定的商品详情--根据商品id
+//    Get specified goods details - based on goods ID
     GoodsVo getGoodsVoByGoodsId(Long goodsId);
   
 }

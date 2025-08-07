@@ -13,7 +13,7 @@ import java.util.Date;
 /**
  * @author Heather
  * @version 1.0
- * 订单实体类
+ * Order Entity Class
  */
 @Data
 @TableName("`order`")

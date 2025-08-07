@@ -20,7 +20,7 @@ import java.util.Date;
 /**
  * @author Heather
  * @version 1.0
- * 订单Service实现类
+ * Order Service Implementation Class
  */
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
@@ -32,19 +32,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Resource
     private FlashSaleGoodsService flashSaleGoodsService;
 
-    //创建秒杀订单
+    // Create flash sale order
     @Override
     public Order creatFlashSaleOrder(User user, GoodsVo goodsVo) {
-        // 查询商品库存
+        // Query goods inventory
         FlashSaleGoods flashSaleGoods = flashSaleGoodsService.getOne(
                     new QueryWrapper<FlashSaleGoods>().eq("goods_id", goodsVo.getId()));
-        // 完成基本的秒杀业务逻辑（之后针对高并发场景再做优化）
-        // 库存量-1
+        // Complete basic flash sale business logic (will optimize for high concurrency scenarios later)
+        // Decrease inventory by 1
         flashSaleGoods.setFlashSaleStock(flashSaleGoods.getFlashSaleStock()-1);
-        // 更新商品库存
+        // Update goods inventory
         flashSaleGoodsService.updateById(flashSaleGoods);
         
-        //创建普通订单
+        // Create regular order
         Order order = new Order();
         order.setUserId(user.getId());
         order.setGoodsId(goodsVo.getId());
@@ -56,18 +56,18 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setOrderStatus(0);
         order.setCreateTime(new Date());
         order.setPayTime(null);
-        //保存普通订单信息
+        // Save regular order information
         orderMapper.insert(order);
 
-        // 创建秒杀商品订单
+        // Create flash sale goods order
         FlashSaleOrder flashSaleOrder = new FlashSaleOrder();
         flashSaleOrder.setGoodsId(goodsVo.getId());
         flashSaleOrder.setOrderId(order.getId());
         flashSaleOrder.setUserId(user.getId());
-        // 保存秒杀商品订单信息
+        // Save flash sale goods order information
         flashSaleOrderMapper.insert(flashSaleOrder);
 
-        // 返回订单对象
+        // Return order object
         return order;
     }
 

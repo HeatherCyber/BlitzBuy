@@ -13,21 +13,21 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  */
 @Configuration
 public class RedisConfig {
-//    自定义RedisTemplate对象，注入到容器
-//    后续通过该对象操作Redis
+//    Custom RedisTemplate object, inject into container
+//    Use this object to operate Redis later
     @Bean
     public RedisTemplate<String,Object> redisTemplate(RedisConnectionFactory redisConnectionFactory){
 
         RedisTemplate<String,Object>redisTemplate = new RedisTemplate<>();
-//      设置相应key的序列化
+//      Set key serialization
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-//      value序列化：
-//      redis默认是idk的序列化(二进制),这里使用的是通用的json数据,不用传具体的序列化的对象
+//      Value serialization:
+//      Redis default is IDK serialization (binary), here using generic JSON data, no need to pass specific serialization objects
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-//      设置相应hash序列化
+//      Set hash serialization
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-//      注入连接工厂
+//      Inject connection factory
         redisTemplate.setConnectionFactory(redisConnectionFactory);
         return redisTemplate;
     }

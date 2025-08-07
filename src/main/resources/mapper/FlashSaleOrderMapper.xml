@@ -10,18 +10,18 @@
         <result property="goodsId" column="goods_id"/>
     </resultMap>
 
-    <!-- 查询秒杀订单 -->
+    <!-- Query flash sale order -->
     <!-- <select id="selectById" resultMap="flashSaleOrderResultMap">
         SELECT * FROM flash_sale_order WHERE id = #{id}
     </select> -->
 
-    <!-- 插入秒杀订单 -->
+    <!-- Insert flash sale order -->
     <!-- <insert id="insert" parameterType="com.example.blitzbuy.pojo.FlashSaleOrder" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO flash_sale_order (user_id, order_id, goods_id)
         VALUES (#{userId}, #{orderId}, #{goodsId})
     </insert> -->
 
-    <!-- 根据用户和商品查询秒杀订单 -->
+    <!-- Query flash sale order by user and goods -->
     <!-- <select id="selectOne" resultMap="flashSaleOrderResultMap">
         SELECT * FROM flash_sale_order WHERE user_id = #{userId} AND goods_id = #{goodsId}
     </select> -->

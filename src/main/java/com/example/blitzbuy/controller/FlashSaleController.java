@@ -18,7 +18,7 @@ import com.example.blitzbuy.pojo.User;
 
 /**
  * version 1.0
- * 秒杀控制器 : 处理用户抢购请求, 返回抢购结果(暂不考虑高并发情况)
+ * Flash Sale Controller: Handle user flash sale requests, return flash sale results (not considering high concurrency scenarios for now)
  */
 
 @Controller
@@ -34,7 +34,7 @@ public class FlashSaleController {
     @Resource
     private OrderService orderService;
 
-    // 处理用户抢购请求
+    // Handle user flash sale request
     @RequestMapping("/doFlashSale")
     public String doFlashSale(Model model, User user, Long goodsId){
 
@@ -44,18 +44,18 @@ public class FlashSaleController {
         }
         model.addAttribute("user", user);
 
-        // 获取goodsVo
+        // Get goodsVo
         GoodsVo goodsVo = goodsService.getGoodsVoByGoodsId(goodsId);
         
-        // 秒杀逻辑
-        // 1. 查询促销商品的库存
+        // Flash sale logic
+        // 1. Query promotional goods inventory
         int stock = goodsVo.getFlashSaleStock();
         if(stock <= 0){
             model.addAttribute("errmsg", RespBeanEnum.EMPTY_STOCK.getMessage());
             return "flashSaleFail";
         }
 
-        // 2. 判断用户是否在复购商品
+        // 2. Check if user is repurchasing goods
         FlashSaleOrder flashSaleOrder = flashSaleOrderService.getOne(
             new QueryWrapper<FlashSaleOrder>()
             .eq("user_id", user.getId())
@@ -66,14 +66,14 @@ public class FlashSaleController {
         }
 
 
-        // 3. 创建抢购订单
+        // 3. Create flash sale order
         Order order = orderService.creatFlashSaleOrder(user, goodsVo);
         if(order == null){
             model.addAttribute("errmsg", RespBeanEnum.ERROR.getMessage());
             return "flashSaleFail";
         }
 
-        // 4. 如果抢购成功，进入订单详情页
+        // 4. If flash sale successful, enter order detail page
         model.addAttribute("order", order);
         model.addAttribute("goods", goodsVo);
         return "orderDetail";

@@ -12,7 +12,7 @@ import java.io.Serializable;
 /**
  * @author Heather
  * @version 1.0
- * 秒杀订单实体类
+ * Flash Sale Order Entity Class
  */
 @Data
 @TableName("flash_sale_order")

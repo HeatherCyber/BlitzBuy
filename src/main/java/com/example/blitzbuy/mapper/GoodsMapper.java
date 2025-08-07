@@ -11,9 +11,9 @@ import java.util.List;
  * @version 1.0
  */
 public interface GoodsMapper extends BaseMapper<Goods> {
-//    获取参与抢购活动的商品列表
+//    Get list of goods participating in flash sale activities
     List<GoodsVo> getGoodsVo();
-// 获取指定的商品详情--根据商品id
+// Get specified goods details - based on goods ID
     GoodsVo getGoodsVoByGoodsId(Long goodsId);
 
 }

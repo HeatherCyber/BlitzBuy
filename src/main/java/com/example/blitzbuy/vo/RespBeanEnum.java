@@ -23,9 +23,9 @@ public enum RespBeanEnum {
     MOBILE_ERROR(500211,"Invalid mobile number format."),
     MOBILE_NOT_EXIST(500212,"Mobile number not found."),
 
-// 秒杀模块返回的信息
-    EMPTY_STOCK(500500, "库存不足"),
-    REPEAT_ERROR(500501, "该商品每人限购一件");
+// Flash sale module response messages
+    EMPTY_STOCK(500500, "Insufficient stock"),
+    REPEAT_ERROR(500501, "This item is limited to one per person");
 
     private final Integer code;
     private final String message;

@@ -17,18 +17,18 @@
         <result property="payTime" column="pay_time"/>
     </resultMap>
 
-    <!-- 查询订单
+    <!-- Query order
     <select id="selectById" resultMap="orderResultMap">
         SELECT * FROM `order` WHERE id = #{id}
     </select>-->
 
-    <!-- 插入订单 
+    <!-- Insert order 
     <insert id="insert" parameterType="com.example.blitzbuy.pojo.Order" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO `order` (user_id, goods_id, delivery_address, goods_name, goods_count, goods_price, order_channel, order_status, create_time, pay_time)
         VALUES (#{userId}, #{goodsId}, #{deliveryAddress}, #{goodsName}, #{goodsCount}, #{goodsPrice}, #{orderChannel}, #{orderStatus}, #{createTime}, #{payTime})
     </insert>-->
 
-    <!-- 更新订单状态 
+    <!-- Update order status 
     <update id="updateById" parameterType="com.example.blitzbuy.pojo.Order">
         UPDATE `order`
         <set>

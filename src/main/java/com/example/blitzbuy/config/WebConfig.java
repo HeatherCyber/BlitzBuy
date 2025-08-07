@@ -20,7 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Resource
     private UserArgumentResolver userArgumentResolver;
 
-    //  加载静态资源
+    // Load static resources
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/**").
@@ -28,8 +28,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     }
 
-//    将自定义的用户参数解析器UserArgumentResolver
-//    加入到HandlerMethodArgumentResolver列表中
+//    Add custom user parameter resolver UserArgumentResolver
+//    to the HandlerMethodArgumentResolver list
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(userArgumentResolver);

@@ -21,25 +21,25 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/login")
 public class LoginController {
 
-    //装配UserService
+    // Inject UserService
     @Resource
     private UserService userService;
 
-    // 编写方法，可以进入登录页面
+    // Write method to enter login page
     @RequestMapping("toLogin")
     public String toLogin(){
-        //导航到templates/login.html页面
+        // Navigate to templates/login.html page
         return "login";
     }
 
-    //编写方法，处理用户登录请求
+    // Write method to handle user login request
     @RequestMapping("doLogin")
     @ResponseBody
     public RespBean doLogin(@Valid LoginVo loginVo,
                             HttpServletRequest request,
                             HttpServletResponse response){
 
-        System.out.println("请求已到达");
+        System.out.println("Request has arrived");
         System.out.println(loginVo);
         return userService.doLogin(loginVo, request, response);
 

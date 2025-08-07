@@ -46,10 +46,10 @@ mybatis-plus:
 logging:
   level:
     root: info
-    org.springframework.jdbc: debug  # JDBC 底层日志
+    org.springframework.jdbc: debug  # JDBC underlying logs
     org.mybatis: debug
-    com.baomidou.mybatisplus: trace # MyBatis-Plus 全量日志
+    com.baomidou.mybatisplus: trace # MyBatis-Plus full logs
     com.example.blitzbuy.mapper: trace
-    java.sql: debug                 # 显示JDBC连接细节
+    java.sql: debug                 # Show JDBC connection details
     java.sql.Statement: debug
     java.sql.PreparedStatement: debug

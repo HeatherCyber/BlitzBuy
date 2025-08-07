@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.blitzbuy.mapper.GoodsMapper">
-<!--    Goods字段映射：通用查询-->
+<!--    Goods field mapping: general query-->
     <resultMap id="BaseResultMap" type="com.example.blitzbuy.pojo.Goods">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
@@ -15,9 +15,9 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-<!--    GoodsVo字段映射：通用查询-->
+<!--    GoodsVo field mapping: general query-->
     <resultMap id="GoodsVo" type="com.example.blitzbuy.vo.GoodsVo">
-    <!-- Goods 基本字段 -->
+    <!-- Goods basic fields -->
     <id column="id" property="id"/>
     <result column="name" property="name"/>
     <result column="image_url" property="imageUrl"/>
@@ -28,14 +28,14 @@
     <result column="create_time" property="createTime"/>
     <result column="update_time" property="updateTime"/>
 
-    <!-- GoodsVo 新增字段 -->
+    <!-- GoodsVo additional fields -->
     <result column="flash_sale_price" property="flashSalePrice"/>
     <result column="flash_sale_stock" property="flashSaleStock"/>
     <result column="start_time" property="startTime"/>
     <result column="end_time" property="endTime"/>
 </resultMap>
 
-<!--   getGoodsVo()方法的查询语句-->
+<!--   Query statement for getGoodsVo() method-->
     <select id="getGoodsVo" resultMap="GoodsVo">
         SELECT g.id,
                g.name,
@@ -56,7 +56,7 @@
         AND fsg.is_active = 1;
         </select>
 
-<!--    getGoodsVoByGoodsId(goodsId)方法的查询语句-->
+<!--    Query statement for getGoodsVoByGoodsId(goodsId) method-->
     <select id="getGoodsVoByGoodsId" resultMap="GoodsVo">
         SELECT g.id,
                g.name,

@@ -13,7 +13,7 @@ import java.util.Date;
 /**
  * @author Heather
  * @version 1.0
- * 秒杀订单Service实现类
+ * Flash Sale Order Service Implementation Class
  */
 @Service
 public class FlashSaleOrderServiceImpl

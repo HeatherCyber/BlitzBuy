@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * @author Heather
  * @version 1.0
- * 秒杀订单Mapper接口
+ * Flash Sale Order Mapper Interface
  */
 @Mapper
 public interface FlashSaleOrderMapper extends BaseMapper<FlashSaleOrder> {

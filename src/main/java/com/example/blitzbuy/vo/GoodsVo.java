@@ -11,8 +11,8 @@ import java.util.Date;
 /**
  * @author Heather
  * @version 1.0
- * GoodVo： 封装前端页面需要展示的参与秒杀活动的商品信息
- * fields: 需要整合Goods和sFlashSaleGood两个pojo类的属性，所以要extends Goods，同时把FlashSaleGood的属性复制过来
+ * GoodsVo: Encapsulates goods information participating in flash sale activities for frontend page display
+ * fields: Need to integrate attributes from Goods and FlashSaleGoods pojo classes, so extends Goods, and copy FlashSaleGoods attributes
  */
 @Data
 @AllArgsConstructor
