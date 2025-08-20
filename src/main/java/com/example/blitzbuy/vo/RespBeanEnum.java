@@ -21,11 +21,12 @@ public enum RespBeanEnum {
     LOGIN_ERROR(500210,"Invalid user ID or password."),
     BING_ERROR(500213,"Invalid request parameters"),
     MOBILE_ERROR(500211,"Invalid mobile number format."),
-    MOBILE_NOT_EXIST(500212,"Mobile number not found."),
+    USER_NOT_EXIST(500212,"User does not exist."),
 
 // Flash sale module response messages
     EMPTY_STOCK(500500, "Insufficient stock"),
-    REPEAT_ERROR(500501, "This item is limited to one per person");
+    REPEAT_ERROR(500501, "This item is limited to one per person"),
+    PASSWORD_UPDATE_FAIL(500502, "Password update failed.");
 
     private final Integer code;
     private final String message;

@@ -88,22 +88,39 @@ public class GoodsController {
     }
 
     /**
-     * Enter goods detail page - based on goods ID
+     * Enter goods detail page - based on goods ID - optimized with Redis
      * @param model: Used to pass data to frontend
      * @param user: User object obtained through WebMvcConfigurer parameter resolution
      * @param goodsId: Goods ID, path variable, obtained from request path
      * @return: String, corresponding HTML page name
      */
-    @RequestMapping("/toDetail/{goodsId}")
-    public String toDetail(Model model, User user, @PathVariable Long goodsId){
+    @RequestMapping(value = "/toDetail/{goodsId}", produces = "text/html;charset=UTF-8")
+    @ResponseBody
+    public String toDetail(Model model, 
+                            User user, 
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            @PathVariable Long goodsId){
         // If user is null, login was not successful
         if(null == user){
             return "login";
         }
+
+        // Get goods detail HTML from Redis
+        String goodsDetailKey = "goodsDetail:" + goodsId;
+        String goodsDetailHtml = (String) redisTemplate.opsForValue().get(goodsDetailKey);
+
+        // If HTML exists in Redis, return HTML content directly
+        if (StringUtils.hasText(goodsDetailHtml)) {
+            return goodsDetailHtml;
+        }
+
         // Add user object to model
         model.addAttribute("user", user);
-        // Add queried goods details to model
+
+        // Add queried goods details（from database） to model
         GoodsVo goodsVo = goodsService.getGoodsVoByGoodsId(goodsId);
+        // Add queried goods details to model
         model.addAttribute("goods", goodsVo);
         // Return flash sale goods detail page with flash sale status
         // Get flash sale status: 0-not started, 1-in progress, 2-ended
@@ -136,7 +153,17 @@ public class GoodsController {
         model.addAttribute("flashSaleStatus", status);
         model.addAttribute("remainSeconds", remainSeconds);
 
+         // If not in Redis, get from database and cache HTML
+         // Manually render HTML page
+         Context context = new Context(request.getLocale(), model.asMap());
+         goodsDetailHtml = thymeleafViewResolver.getTemplateEngine().process("goodsDetail", context);
+         // If rendering successful
+         if(StringUtils.hasText(goodsDetailHtml)){
+         // Store complete HTML page in Redis with expiration time (60 seconds)
+         redisTemplate.opsForValue().set(goodsDetailKey, goodsDetailHtml, 60, TimeUnit.SECONDS);
+         }   
+
         // Return flash sale goods detail page
-        return "goodsDetail";
+        return goodsDetailHtml;
     }
 }
