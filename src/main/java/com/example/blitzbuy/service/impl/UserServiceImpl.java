@@ -35,7 +35,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Resource
     private UserMapper userMapper;
     @Resource
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * Handles user login authentication

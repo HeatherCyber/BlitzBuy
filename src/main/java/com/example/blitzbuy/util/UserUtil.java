@@ -29,7 +29,7 @@ public class UserUtil {
         // count represents the number of users to create
         for (int i = 0; i < count; i++) {
             User user = new User();
-            user.setId(13500001000L + i);
+            user.setId(13500001001L + i);
             user.setNickname("testUser" + i);
             // Generate a random 8-character salt (numbers and letters)
             user.setSalt(RandomUtil.randomString(8));// Salt for user data table, set by programmer
@@ -116,6 +116,6 @@ public class UserUtil {
     }
 
     public static void main(String[] args) throws Exception {
-        create(1000);
+        create(2000);
     }
 }

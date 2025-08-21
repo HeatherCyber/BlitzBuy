@@ -24,7 +24,7 @@ public enum RespBeanEnum {
     USER_NOT_EXIST(500212,"User does not exist."),
 
 // Flash sale module response messages
-    EMPTY_STOCK(500500, "Insufficient stock"),
+    INSUFFICIENT_STOCK(500500, "Insufficient stock"),
     REPEAT_ERROR(500501, "This item is limited to one per person"),
     PASSWORD_UPDATE_FAIL(500502, "Password update failed.");
 
