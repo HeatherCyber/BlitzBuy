@@ -32,7 +32,29 @@ spring:
           max-idle: 200
           min-idle: 5
       password: foobared
-
+  # RabbitMQ configuration
+  rabbitmq:
+    host: 192.168.33.10  # Use your virtual machine IP
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    # Connection pool configuration
+    listener:
+      simple:
+        concurrency: 5
+        max-concurrency: 10
+        prefetch: 1
+        auto-startup: true
+        default-requeue-rejected: true
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000ms
+        max-attempts: 3
+        max-interval: 10000ms
+        multiplier: 1.0
+        max-interval: 10000ms
 
 
 mybatis-plus:
