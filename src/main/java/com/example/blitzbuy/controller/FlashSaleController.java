@@ -1,12 +1,13 @@
 package com.example.blitzbuy.controller;
 
 import com.example.blitzbuy.pojo.FlashSaleOrder;
-import com.example.blitzbuy.pojo.Order;
+import com.example.blitzbuy.pojo.FlashSaleMessage;
 import com.example.blitzbuy.service.GoodsService;
 import com.example.blitzbuy.service.FlashSaleOrderService;
 import com.example.blitzbuy.service.OrderService;
 import com.example.blitzbuy.vo.GoodsVo;
 import com.example.blitzbuy.vo.RespBeanEnum;
+import com.example.blitzbuy.vo.RespBean;
 import jakarta.annotation.Resource;
 
 import java.util.HashMap;
@@ -18,15 +19,21 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 
 import com.example.blitzbuy.pojo.User;
+import com.example.blitzbuy.rabbitmq.MQSender;
+
+import cn.hutool.json.JSONUtil;
 
 /**
- * version 3.0
+ * version 4.0
  * Flash Sale Controller: Handle user flash sale requests, return flash sale results
- * 1. Use Redis to pre-reduce inventory, solve high concurrency problems 
- * 2. Add local JVM memory check before pre-reducing inventory in Redis, reduce unnecessary Redis operations
+ * 1. Use Redis to pre-reduce inventory, solve high concurrency problems (version 3.0)
+ * 2. Add local JVM memory check before pre-reducing inventory in Redis, reduce unnecessary Redis operations (version 3.0)
+ * 3. Use message queue (RabbitMQ) to implement asynchronous processing of flash sale requests (version 4.0)
  */
 
 @Controller
@@ -45,8 +52,13 @@ public class FlashSaleController implements InitializingBean {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Resource
+    private MQSender mqSender;
+
     //Define a map to store the goods stock in local JVM memory, key: goodsId, value: hasStock
     private Map<Long, Boolean> goodsStockMap = new HashMap<>();
+
+   
 
     // Handle user flash sale request
     @RequestMapping("/doFlashSale")
@@ -67,7 +79,7 @@ public class FlashSaleController implements InitializingBean {
         int stock = goodsVo.getFlashSaleStock();
         if(stock <= 0){ 
             // If the inventory is less than or equal to 0, return flash sale failed
-            model.addAttribute("errmsg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
+            model.addAttribute("msg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
             return "flashSaleFail";
         }
 
@@ -76,7 +88,7 @@ public class FlashSaleController implements InitializingBean {
         FlashSaleOrder flashSaleOrder = (FlashSaleOrder)redisTemplate.opsForValue().get("flashSaleOrder:" + user.getId() + ":" + goodsId);
         if(flashSaleOrder != null){ 
             // If the flash sale order exists in Redis, return flash sale failed
-            model.addAttribute("errmsg", RespBeanEnum.REPEAT_ERROR.getMessage());
+            model.addAttribute("msg", RespBeanEnum.REPEAT_ERROR.getMessage());
             return "flashSaleFail";
         }
 
@@ -84,7 +96,7 @@ public class FlashSaleController implements InitializingBean {
         // 3. Optimization: Check if the inventory is maked as false in local JVM memory
         if(!goodsStockMap.get(goodsId)){
             // If the inventory is maked as false in local JVM memory, return flash sale failed
-            model.addAttribute("errmsg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
+            model.addAttribute("msg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
             return "flashSaleFail";
         }
 
@@ -102,22 +114,42 @@ public class FlashSaleController implements InitializingBean {
             goodsStockMap.put(goodsId, false);
 
             // return flash sale failed
-            model.addAttribute("errmsg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
+            model.addAttribute("msg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
             return "flashSaleFail";
         }
 
-        // 5. If not, create flash sale order
-        Order order = orderService.creatFlashSaleOrder(user, goodsVo);
-        if(order == null){
-            model.addAttribute("errmsg", RespBeanEnum.ERROR.getMessage());
-            return "flashSaleFail";
+        // 5. If not, do flash sale order asynchronously
+        // 5.1 Send flash sale message to RabbitMQ, MQReceiver will call orderService.creatFlashSaleOrder() asynchronously
+        // 5.1.1 Create flash sale message
+        FlashSaleMessage flashSaleMessage = new FlashSaleMessage(user, goodsId);
+        // 5.1.2 Convert flash sale message to JSON string
+        String message = JSONUtil.toJsonStr(flashSaleMessage);
+        // 5.1.3 Send flash sale message to RabbitMQ
+        mqSender.sendFlashSaleMessage(message);
+
+        // 5.2 Set goodsId for polling
+        model.addAttribute("goodsId", goodsId);
+
+        // 5.3 Client can query order status by polling
+        return "flashSaleResult";
+
+    }
+
+    /**
+     * Get flash sale result for polling
+     * @param user current user
+     * @param goodsId goods id
+     * @return RespBean with result from OrderService
+     */
+    @RequestMapping("/getFlashSaleResult")
+    @ResponseBody
+    public RespBean getFlashSaleResult(User user, @RequestParam Long goodsId) {
+        if (user == null) {
+            return RespBean.error(RespBeanEnum.ERROR);
         }
 
-        // 6. If flash sale successful, enter order detail page
-        model.addAttribute("order", order);
-        model.addAttribute("goods", goodsVo);
-        return "orderDetail";
-
+        Long result = orderService.getFlashSaleResult(user.getId(), goodsId);
+        return RespBean.success(result);
     }
 
     /**

@@ -26,7 +26,8 @@ public enum RespBeanEnum {
 // Flash sale module response messages
     INSUFFICIENT_STOCK(500500, "Insufficient stock"),
     REPEAT_ERROR(500501, "This item is limited to one per person"),
-    PASSWORD_UPDATE_FAIL(500502, "Password update failed.");
+    PASSWORD_UPDATE_FAIL(500502, "Password update failed."),
+    QUEUE_SUCCESS(500503, "Queueing, please wait...");
 
     private final Integer code;
     private final String message;

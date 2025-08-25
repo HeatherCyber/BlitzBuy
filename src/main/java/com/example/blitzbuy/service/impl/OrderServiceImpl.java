@@ -62,8 +62,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             eq("goods_id", goodsVo.getId()). // Goods ID
             gt("flash_sale_stock", 0)); // Ensure inventory is greater than 0
 
-        // If update failed, return null
+        // If update failed
         if(!updateResult){
+            // Save the failure information to Redis(key = flashSaleFail:userID:goodsID, value = 0)
+            redisTemplate.opsForValue().set("flashSaleFail:" + user.getId() + ":" + goodsVo.getId(), "0");
+            // Return null
             return null;
         }
 
@@ -97,6 +100,29 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         // Return order object
         return order;
+    }
+
+    @Override
+    public Long getFlashSaleResult(Long userId, Long goodsId) {
+        // Check if flash sale order exists in Redis
+        FlashSaleOrder flashSaleOrder = (FlashSaleOrder) redisTemplate.opsForValue().get("flashSaleOrder:" + userId + ":" + goodsId);
+        
+        if (flashSaleOrder != null) {
+            // Flash sale successful, return orderId
+            return flashSaleOrder.getOrderId();
+        }
+
+        // Check if there's a failure message in Redis
+        String failureKey = "flashSaleFail:" + userId + ":" + goodsId;
+        String failureResult = (String) redisTemplate.opsForValue().get(failureKey);
+        
+        if (failureResult != null) {
+            // Flash sale failed, return -1
+            return -1L;
+        }
+
+        // Still in queue, return 0
+        return 0L;
     }
 
    
