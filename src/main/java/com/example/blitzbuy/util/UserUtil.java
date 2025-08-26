@@ -116,6 +116,6 @@ public class UserUtil {
     }
 
     public static void main(String[] args) throws Exception {
-        create(2000);
+        create(1000);
     }
 }

@@ -5,14 +5,14 @@
     <meta charset="UTF-8">
     <title>BlitzBuy</title>
     <!--jquery-->
-    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
     <!-- bootstrap -->
-    <link rel="stylesheet" type="text/css" th:href="@{/bootstrap/css/bootstrap.min.css}"/>
-    <script type="text/javascript" th:src="@{/bootstrap/js/bootstrap.js}"></script>
+    <link rel="stylesheet" type="text/css" href="/bootstrap/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="/bootstrap/js/bootstrap.js"></script>
     <!-- layer -->
-    <script type="text/javascript" th:src="@{/layer/layer.js}"></script>
+    <script type="text/javascript" src="/layer/layer.js"></script>
     <!-- common.js -->
-    <script type="text/javascript" th:src="@{/js/common.js}"></script>
+    <script type="text/javascript" src="/js/common.js"></script>
 
     <style>
         * {
@@ -147,7 +147,7 @@
             </tr>
             <tr>
                 <td>Image</td>
-                <td colspan="3"><img id="goodImg" th:src="@{${goods.imageUrl}}" width="200"
+                <td colspan="3"><img id="goodImg" th:src="${goods.imageUrl}" width="200"
                                      heights="200"/></td>
             </tr>
 

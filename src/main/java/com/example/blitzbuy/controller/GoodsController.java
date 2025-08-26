@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.RedisTemplate;
@@ -40,10 +39,10 @@ public class GoodsController {
     private ThymeleafViewResolver thymeleafViewResolver;
 
     /**
-     * Enter goods list page - optimized with Redis
-     * @param model
+     * Enter goods list page - optimized with Redis caching
+     * @param model: Used to pass data to frontend template
      * @param user: User object obtained through WebMvcConfigurer parameter resolution
-     * @return: String, corresponding HTML page name
+     * @return: String, complete HTML page content
      */
     @RequestMapping(value = "/toList", produces = "text/html;charset=UTF-8")
     @ResponseBody
@@ -54,7 +53,9 @@ public class GoodsController {
 
         // If user is null, login was not successful
         if(null == user){
-            return "login";
+            response.setStatus(HttpServletResponse.SC_FOUND);
+            response.setHeader("Location", "/login/toLogin");
+            return "";
         }
 
         // Get goods list HTML from Redis
@@ -66,22 +67,29 @@ public class GoodsController {
             return goodsListHtml;
         }
 
-        // If user exists, add user object to model for next template
+        // If HTML does not exist in Redis, query database and render template
+        // Add user and goods data to model for template rendering
         model.addAttribute("user", user);
-        // Add promotional goods list to model
         model.addAttribute("goodsList", goodsService.getGoodsVo());
-
-        // If not in Redis, get from database and cache HTML
-        List<GoodsVo> goodsList = goodsService.getGoodsVo();
         
-        // Manually render HTML page
-        Context context = new Context(request.getLocale(), model.asMap());
-        goodsListHtml = thymeleafViewResolver.getTemplateEngine().process("goodsList", context);
-        // If rendering successful
-        if(StringUtils.hasText(goodsListHtml)){
-        // Store complete HTML page in Redis with expiration time (60 seconds)
-        redisTemplate.opsForValue().set(goodsListKey, goodsListHtml, 60, TimeUnit.SECONDS);
-        }   
+        // Manually render HTML page using Thymeleaf
+        try {
+            Context context = new Context(request.getLocale(), model.asMap());
+            goodsListHtml = thymeleafViewResolver.getTemplateEngine().process("goodsList", context);
+            // If rendering successful
+            if(StringUtils.hasText(goodsListHtml)){
+                // Store complete HTML page in Redis with expiration time (60 seconds)
+                redisTemplate.opsForValue().set(goodsListKey, goodsListHtml, 60, TimeUnit.SECONDS);
+            } else {
+                // If rendering failed, return error page
+                return "error";
+            }
+        } catch (Exception e) {
+            // Log the error and return error page
+            System.err.println("Template rendering error: " + e.getMessage());
+            e.printStackTrace();
+            return "error";
+        }
         
         // Return goods list page
         return goodsListHtml;
@@ -103,7 +111,9 @@ public class GoodsController {
                             @PathVariable Long goodsId){
         // If user is null, login was not successful
         if(null == user){
-            return "login";
+            response.setStatus(HttpServletResponse.SC_FOUND);
+            response.setHeader("Location", "/login/toLogin");
+            return "";
         }
 
         // Get goods detail HTML from Redis
@@ -155,13 +165,23 @@ public class GoodsController {
 
          // If not in Redis, get from database and cache HTML
          // Manually render HTML page
-         Context context = new Context(request.getLocale(), model.asMap());
-         goodsDetailHtml = thymeleafViewResolver.getTemplateEngine().process("goodsDetail", context);
-         // If rendering successful
-         if(StringUtils.hasText(goodsDetailHtml)){
-         // Store complete HTML page in Redis with expiration time (60 seconds)
-         redisTemplate.opsForValue().set(goodsDetailKey, goodsDetailHtml, 60, TimeUnit.SECONDS);
-         }   
+         try {
+             Context context = new Context(request.getLocale(), model.asMap());
+             goodsDetailHtml = thymeleafViewResolver.getTemplateEngine().process("goodsDetail", context);
+             // If rendering successful
+             if(StringUtils.hasText(goodsDetailHtml)){
+                 // Store complete HTML page in Redis with expiration time (60 seconds)
+                 redisTemplate.opsForValue().set(goodsDetailKey, goodsDetailHtml, 60, TimeUnit.SECONDS);
+             } else {
+                 // If rendering failed, return error page
+                 return "error";
+             }
+         } catch (Exception e) {
+             // Log the error and return error page
+             System.err.println("Template rendering error: " + e.getMessage());
+             e.printStackTrace();
+             return "error";
+         }
 
         // Return flash sale goods detail page
         return goodsDetailHtml;

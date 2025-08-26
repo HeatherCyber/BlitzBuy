@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Heather
@@ -64,6 +65,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         // If update failed
         if(!updateResult){
+            // Rollback Redis stock since database update failed
+            redisTemplate.opsForValue().increment("flashSaleStock:" + goodsVo.getId());
+            
             // Save the failure information to Redis(key = flashSaleFail:userID:goodsID, value = 0)
             redisTemplate.opsForValue().set("flashSaleFail:" + user.getId() + ":" + goodsVo.getId(), "0");
             // Return null
@@ -96,7 +100,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         //Put the generated flash sale order information into Redis
         //Avoid querying the database repeatedly when verifying repeat purchases
         //(key = flashSaleOrder:userID:goodsID, value = flashSaleOrder)
-        redisTemplate.opsForValue().set("flashSaleOrder:" + user.getId() + ":" + goodsVo.getId(), flashSaleOrder);
+        // Save flash sale order to Redis for repeat purchase check
+        String redisKey = "flashSaleOrder:" + user.getId() + ":" + goodsVo.getId();
+        redisTemplate.opsForValue().set(redisKey, flashSaleOrder);
 
         // Return order object
         return order;
@@ -119,6 +125,34 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (failureResult != null) {
             // Flash sale failed, return -1
             return -1L;
+        }
+        
+        // Check if message was sent to queue
+        String messageSentKey = "flashSaleMessageSent:" + userId + ":" + goodsId;
+        String messageSent = (String) redisTemplate.opsForValue().get(messageSentKey);
+        
+        if (messageSent == null) {
+            // Message was not sent, mark as failed
+            redisTemplate.opsForValue().set(failureKey, "0", 60, TimeUnit.SECONDS);
+            return -1L;
+        }
+
+        // Check for timeout - if user has been polling for too long, mark as failed
+        String timeoutKey = "flashSaleTimeout:" + userId + ":" + goodsId;
+        String startTime = (String) redisTemplate.opsForValue().get(timeoutKey);
+        
+        if (startTime == null) {
+            // First time polling, set start time
+            redisTemplate.opsForValue().set(timeoutKey, String.valueOf(System.currentTimeMillis()), 5, TimeUnit.SECONDS);
+        } else {
+            // Check if polling has been going on for more than 1 second
+            long elapsedTime = System.currentTimeMillis() - Long.parseLong(startTime);
+            if (elapsedTime > 1000) { // 1 second timeout
+                // Mark as failed due to timeout
+                redisTemplate.opsForValue().set(failureKey, "0", 60, TimeUnit.SECONDS);
+                redisTemplate.delete(timeoutKey);
+                return -1L;
+            }
         }
 
         // Still in queue, return 0

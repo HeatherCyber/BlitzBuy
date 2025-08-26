@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <title>Goods List</title>
     <!-- bootstrap -->
-    <link rel="stylesheet" type="text/css" th:href="@{/bootstrap/css/bootstrap.min.css}"/>
-    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <link rel="stylesheet" type="text/css" href="/bootstrap/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
     <!-- jquery-validator -->
-    <script type="text/javascript" th:src="@{/jquery-validation/jquery.validate.min.js}"></script>
-    <script type="text/javascript" th:src="@{/jquery-validation/localization/messages_zh.min.js}"></script>
+    <script type="text/javascript" src="/jquery-validation/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="/jquery-validation/localization/messages_zh.min.js"></script>
     <!-- layer -->
-    <script type="text/javascript" th:src="@{/layer/layer.js}"></script>
+    <script type="text/javascript" src="/layer/layer.js"></script>
     <!-- md5.js -->
-    <script type="text/javascript" th:src="@{/js/md5.min.js}"></script>
+    <script type="text/javascript" src="/js/md5.min.js"></script>
     <!-- common.js -->
-    <script type="text/javascript" th:src="@{/js/common.js}"></script>
+    <script type="text/javascript" src="/js/common.js"></script>
     <style>
         * {
             margin: 0;
@@ -77,6 +77,58 @@
             color: #ce7d88;
             border: solid 1px #eac7cc;
         }
+
+        /* Table header styling */
+        .table-header {
+            background: #c9302c;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 14px;
+            border: none;
+        }
+
+        .table-header th {
+            padding: 15px 10px;
+            border: none;
+            text-align: center;
+            vertical-align: middle;
+            position: relative;
+        }
+
+        /* Table body styling */
+        #goodslist tbody tr {
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        #goodslist tbody tr:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #goodslist tbody td {
+            padding: 12px 10px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        /* Panel heading styling */
+        .panel-heading {
+            background: white;
+            color: #c9302c;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0;
+            text-align: center;
+            border-bottom: 2px solid #c9302c;
+        }
     </style>
 </head>
 <body>
@@ -85,7 +137,7 @@
 <!--抽取头部公共页面-->
 <header id="site-header" class="main-header">
     <!-- Logo -->
-    <a class="logo" th:href="@{/goods/toList}">
+    <a class="logo" href="/goods/toList">
         <span class="logo-lg"><b>BlitzBuy</b></span></a>
 
     <nav class="navbar navbar-static-top">
@@ -119,7 +171,7 @@
                         </li>
                         <li class="user-footer">
                             <div class="pull-middle">
-                                <a th:href="@{/login/out}" class="btn btn-lg btn-default btn-block">Log Out</a>
+                                <a href="/login/out" class="btn btn-lg btn-default btn-block">Log Out</a>
                             </div>
                         </li>
                     </ul>
@@ -133,23 +185,27 @@
     <div class="panel-heading">Hot Sale</div>
 
     <table class="table" id="goodslist">
-        <tr>
-            <td>Product Name</td>
-            <td>Image</td>
-            <td>Regular Price</td>
-            <td>Flash Sale Price</td>
-            <td>Stock Left</td>
-            <td>Details</td>
-        </tr>
-        <tr th:each="goods,goodstStat : ${goodsList}">
-            <td th:text="${goods.name}"></td>
-            <td><img th:src="@{${goods.imageUrl}}" width="100" height="100"/>
-            </td>
-            <td th:text="${goods.price}"></td>
-            <td th:text="${goods.flashSalePrice}"></td>
-            <td th:text="${goods.flashSaleStock}"></td>
-            <td><a th:href="'/goods/toDetail/'+${goods.id}">Product Details</a></td>
-        </tr>
+        <thead>
+            <tr class="table-header">
+                <th>Product Name</th>
+                <th>Image</th>
+                <th>Regular Price</th>
+                <th>Flash Sale Price</th>
+                <th>Stock Left</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="goods,goodsStat : ${goodsList}">
+                <td th:text="${goods.name}"></td>
+                <td><img th:src="${goods.imageUrl}" width="100" height="100"/>
+                </td>
+                <td th:text="${goods.price}"></td>
+                <td th:text="${goods.flashSalePrice}"></td>
+                <td th:text="${goods.flashSaleStock}"></td>
+                <td><a th:href="'/goods/toDetail/' + ${goods.id}">Product Details</a></td>
+            </tr>
+        </tbody>
     </table>
 </div>
 <script>

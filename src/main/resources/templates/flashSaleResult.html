@@ -59,32 +59,66 @@
             <p>Order ID: <span id="orderId"></span></p>
             <a href="/order/detail" id="orderDetailLink" class="btn btn-primary">View Order Details</a>
         </div>
+        
+        <div id="retrySection" class="order-detail" style="display: none;">
+            <h3>Try Again</h3>
+            <p>Your request may have timed out. You can try again:</p>
+            <button onclick="retryFlashSale()" class="btn btn-warning">Retry Flash Sale</button>
+            <a href="/goods/toList" class="btn btn-default">Back to Goods List</a>
+        </div>
     </div>
 
     <script th:inline="javascript">
-        // Get goodsId from Thymeleaf model
+        // Get parameters from Thymeleaf model
         const goodsId = /*[[${goodsId}]]*/ null;
+        const alreadyPurchased = /*[[${alreadyPurchased}]]*/ false;
+        const orderId = /*[[${orderId}]]*/ null;
         
-        if (!goodsId) {
-            document.getElementById('statusText').textContent = 'Parameter Error: Missing Goods ID';
-            document.getElementById('statusContainer').className = 'status error';
-            return;
-        }
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!goodsId) {
+                document.getElementById('statusText').textContent = 'Parameter Error: Missing Goods ID';
+                document.getElementById('statusContainer').className = 'status error';
+                return;
+            }
+            
+            // If user has already purchased, show success immediately
+            if (alreadyPurchased && orderId) {
+                document.getElementById('statusText').textContent = '您已经成功抢购过此商品！';
+                document.getElementById('statusContainer').className = 'status success';
+                document.getElementById('orderId').textContent = orderId;
+                document.getElementById('orderDetail').style.display = 'block';
+                document.getElementById('orderDetailLink').href = `/order/detail/${orderId}`;
+                return;
+            }
+            
+            // Start polling if not already purchased
+            setTimeout(pollFlashSaleResult, 50);
+        });
 
         // Polling function to check flash sale result
+        let pollCount = 0;
+        const maxPolls = 20; // Maximum 1 second (20 * 50ms)
+        
         function pollFlashSaleResult() {
+            pollCount++;
+            
+            // Add polling count to status message
+            const baseMessage = 'In Queue, Please Wait';
+            const dots = '.'.repeat((pollCount % 4) + 1);
+            document.getElementById('statusText').textContent = `${baseMessage}${dots} (${pollCount}/20)`;
+            
             fetch(`/flashSale/getFlashSaleResult?goodsId=${goodsId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
+                credentials: 'same-origin' // Include cookies for user authentication
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Polling result:', data);
-                
                 if (data.code === 200) {
-                    const result = data.data;
+                    const result = data.object; // 修复：使用data.object而不是data.data
                     
                     if (result > 0) {
                         // Flash sale successful, show order ID
@@ -98,32 +132,55 @@
                         // Flash sale failed
                         document.getElementById('statusText').textContent = 'Flash Sale Failed, Please Try Again';
                         document.getElementById('statusContainer').className = 'status error';
+                        document.getElementById('retrySection').style.display = 'block';
                         return; // Stop polling
                     } else if (result === 0) {
                         // Still in queue, continue polling
-                        document.getElementById('statusText').textContent = 'In Queue, Please Wait...';
                         document.getElementById('statusContainer').className = 'status waiting';
-                        // Continue polling after 100ms
-                        setTimeout(pollFlashSaleResult, 100);
+                        
+                        // Stop polling if max count reached
+                        if (pollCount >= maxPolls) {
+                            document.getElementById('statusText').textContent = 'Request Timeout, Please Try Again';
+                            document.getElementById('statusContainer').className = 'status error';
+                            document.getElementById('retrySection').style.display = 'block';
+                            return;
+                        }
+                        
+                        // Continue polling after 50ms
+                        setTimeout(pollFlashSaleResult, 50);
                     }
                 } else {
                     // Error occurred
                     document.getElementById('statusText').textContent = 'Query Failed: ' + data.message;
                     document.getElementById('statusContainer').className = 'status error';
+                    document.getElementById('retrySection').style.display = 'block';
                 }
             })
             .catch(error => {
                 console.error('Polling error:', error);
                 document.getElementById('statusText').textContent = 'Network Error, Please Try Again';
                 document.getElementById('statusContainer').className = 'status error';
+                document.getElementById('retrySection').style.display = 'block';
             });
         }
 
-        // Start polling when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Start polling after a short delay
-            setTimeout(pollFlashSaleResult, 100);
-        });
+
+        
+        // Retry function
+        function retryFlashSale() {
+            // Reset polling state
+            pollCount = 0;
+            
+            // Hide retry section
+            document.getElementById('retrySection').style.display = 'none';
+            
+            // Reset status
+            document.getElementById('statusText').textContent = 'Processing, please wait...';
+            document.getElementById('statusContainer').className = 'status waiting';
+            
+            // Start polling again
+            setTimeout(pollFlashSaleResult, 50);
+        }
     </script>
 </body>
 </html>

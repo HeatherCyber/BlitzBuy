@@ -54,12 +54,11 @@ spring:
         max-attempts: 3
         max-interval: 10000ms
         multiplier: 1.0
-        max-interval: 10000ms
 
 
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl  # 关闭MyBatis SQL日志
 
   mapper-locations: classpath*:/mapper/*Mapper.xml
   type-aliases-package: com.example.blitzbuy.pojo
@@ -68,10 +67,12 @@ mybatis-plus:
 logging:
   level:
     root: info
-    org.springframework.jdbc: debug  # JDBC underlying logs
-    org.mybatis: debug
-    com.baomidou.mybatisplus: trace # MyBatis-Plus full logs
-    com.example.blitzbuy.mapper: trace
-    java.sql: debug                 # Show JDBC connection details
-    java.sql.Statement: debug
-    java.sql.PreparedStatement: debug
+    org.springframework.jdbc: warn  # 关闭JDBC详细日志
+    org.mybatis: warn
+    com.baomidou.mybatisplus: warn  # 关闭MyBatis-Plus详细日志
+    com.example.blitzbuy.mapper: warn
+    java.sql: warn                  # 关闭JDBC连接详细日志
+    java.sql.Statement: warn
+    java.sql.PreparedStatement: warn
+    # 保留业务日志
+    com.example.blitzbuy: info

@@ -13,6 +13,7 @@ import jakarta.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -87,15 +88,19 @@ public class FlashSaleController implements InitializingBean {
         // 2. Check if user is repurchasing goods (check if the flash sale order exists in Redis)
         FlashSaleOrder flashSaleOrder = (FlashSaleOrder)redisTemplate.opsForValue().get("flashSaleOrder:" + user.getId() + ":" + goodsId);
         if(flashSaleOrder != null){ 
-            // If the flash sale order exists in Redis, return flash sale failed
-            model.addAttribute("msg", RespBeanEnum.REPEAT_ERROR.getMessage());
-            return "flashSaleFail";
+            // If the flash sale order exists in Redis, user has already successfully purchased
+            // Set a special flag to indicate already purchased
+            model.addAttribute("alreadyPurchased", true);
+            model.addAttribute("orderId", flashSaleOrder.getOrderId());
+            model.addAttribute("goodsId", goodsId);
+            return "flashSaleResult";
         }
 
 
-        // 3. Optimization: Check if the inventory is maked as false in local JVM memory
-        if(!goodsStockMap.get(goodsId)){
-            // If the inventory is maked as false in local JVM memory, return flash sale failed
+        // 3. Optimization: Check if the inventory is marked as false in local JVM memory
+        Boolean hasStock = goodsStockMap.get(goodsId);
+        if(hasStock == null || !hasStock){
+            // If the inventory is marked as false in local JVM memory, return flash sale failed
             model.addAttribute("msg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
             return "flashSaleFail";
         }
@@ -105,7 +110,16 @@ public class FlashSaleController implements InitializingBean {
         // Thus, reduce the number of calls to orderService.creatFlashSaleOrder(), avoid crashing the database, and prevent thread accumulation
         // Method: decrement() is atomic, can avoid concurrency problems
         // return the decremented stock
-        Long decrementedStock = redisTemplate.opsForValue().decrement("flashSaleStock:" + goodsId); 
+        
+        // Check if Redis stock exists, if not, initialize it from database
+        String redisStockKey = "flashSaleStock:" + goodsId;
+        if (!redisTemplate.hasKey(redisStockKey)) {
+            redisTemplate.opsForValue().set(redisStockKey, goodsVo.getFlashSaleStock());
+            // Also update local memory
+            goodsStockMap.put(goodsId, goodsVo.getFlashSaleStock() > 0);
+        }
+        
+        Long decrementedStock = redisTemplate.opsForValue().decrement(redisStockKey); 
         
         // If the inventory is less than 0
         if(decrementedStock < 0){ 
@@ -126,6 +140,9 @@ public class FlashSaleController implements InitializingBean {
         String message = JSONUtil.toJsonStr(flashSaleMessage);
         // 5.1.3 Send flash sale message to RabbitMQ
         mqSender.sendFlashSaleMessage(message);
+        
+        // 5.1.4 Mark message as sent for tracking
+        redisTemplate.opsForValue().set("flashSaleMessageSent:" + user.getId() + ":" + goodsId, "1", 30, TimeUnit.SECONDS);
 
         // 5.2 Set goodsId for polling
         model.addAttribute("goodsId", goodsId);
@@ -147,6 +164,22 @@ public class FlashSaleController implements InitializingBean {
         if (user == null) {
             return RespBean.error(RespBeanEnum.ERROR);
         }
+
+        // Add rate limiting - check if user is polling too frequently
+        String rateLimitKey = "rateLimit:" + user.getId() + ":" + goodsId;
+        String lastPollTime = (String) redisTemplate.opsForValue().get(rateLimitKey);
+        long currentTime = System.currentTimeMillis();
+        
+        if (lastPollTime != null) {
+            long timeDiff = currentTime - Long.parseLong(lastPollTime);
+            // Limit polling to once every 50ms
+            if (timeDiff < 50) {
+                return RespBean.error(RespBeanEnum.ERROR);
+            }
+        }
+        
+        // Update last poll time
+        redisTemplate.opsForValue().set(rateLimitKey, String.valueOf(currentTime), 60, TimeUnit.SECONDS);
 
         Long result = orderService.getFlashSaleResult(user.getId(), goodsId);
         return RespBean.success(result);
