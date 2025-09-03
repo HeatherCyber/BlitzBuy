@@ -161,16 +161,16 @@
                     <span id="statusDisplay"></span>
                 </td>
                 <td>
-                        <form id="flashSaleForm" method="post" action="/flashSale/doFlashSale">
+                        <!-- <form id="flashSaleForm" method="post" action="/flashSale/doFlashSale">
                             <input type="hidden" id="goodsId" name="goodsId" th:value="${goods.id}">
                             <button class="btn btn-primary btn-block" type="submit" id="buyButton">Buy Now</button>
-                        </form>
+                        </form> -->
 
-<!--                    &lt;!&ndash; Corresponds to flash sale v6.0 backend hidden interface&ndash;&gt;-->
-<!--                    <input type="hidden" id="goodsId" name="goodsId" th:value="${goods.id}">-->
-<!--                    <button class="btn btn-primary btn-block" type="submit" onclick="getFlashSalePath()" id="buyButton">-->
-<!--                        Buy Now-->
-<!--                    </button>-->
+                   <!-- Corresponds to backend FlashSaleController v5.0 getFlashSalePath() -->
+                   <input type="hidden" id="goodsId" name="goodsId" th:value="${goods.id}">
+                   <button class="btn btn-primary btn-block" type="submit" onclick="getFlashSalePath()" id="buyButton">
+                       Buy Now
+                   </button>
                 </td>
             </tr>
 
@@ -179,11 +179,11 @@
                 <td id="flashSalePrice" th:text="${goods.flashSalePrice}"></td>
                 <td>
                     <!--Display captcha-->
-                    <img id="captchaImg" class="captchaImg"/></td>
+                    <img id="captchaImg" class="captchaImg" style="display: none;"/></td>
                 <td>
                     <!--Input field for captcha-->
-                    <input id="captcha" class="captchaImg"/>
-                    <input type="button" id="captchabtn" onclick="verifyCaptcha()" value="Verify Captcha">
+                    <input id="captcha" class="captchaImg" style="display: none;" placeholder="Enter captcha"/>
+                    <input type="button" id="captchabtn" onclick="verifyCaptcha()" value="Verify Captcha" style="display: none;">
                 </td>
             </tr>
             <tr>
@@ -212,6 +212,10 @@
             var endTimeRemaining = getEndTimeRemaining();
             updateFlashSaleStatus(endTimeRemaining);
             $("#buyButton").show(); //Show button when in progress
+            $("#captchaImg").attr("src", "/flashSale/getCaptcha?goodsId=" + $("#goodsId").val());//get captcha image
+            $("#captchaImg").show(); // show captcha image
+            $("#captcha").show(); // show captcha input field
+            $("#captchabtn").show(); // show captcha button
         } else if (flashSaleStatus == 2) {
             //Ended
             $("#statusDisplay").html("Ended");
@@ -219,6 +223,15 @@
         }
         countDown(); //Execute countDown()
     });
+
+    // 显示验证码（只在状态变为1时调用一次）
+    function showCaptcha() {
+        var goodsId = $("#goodsId").val();
+        $("#captchaImg").attr("src", "/flashSale/getCaptcha?goodsId=" + goodsId);
+        $("#captchaImg").show();
+        $("#captcha").show();
+        $("#captchabtn").show();
+    }
 
     function countDown() {
         //Get flash sale status
@@ -241,6 +254,9 @@
                         var endTimeRemaining = getEndTimeRemaining();
                         updateFlashSaleStatus(endTimeRemaining);
                         $("#buyButton").show(); //Show button when flash sale starts
+                        
+                        // 只在状态变为1时显示一次验证码
+                        showCaptcha();
                     }
                     countDown();
                 }, 1000);
@@ -275,11 +291,7 @@
                 $("#buyButton").hide(); //Hide button when flash sale ends
             }
 
-            //Request captcha and display when flash sale is in progress (captcha image is hidden by default)
-            $("#captchaImg").attr("src", "/flashSale/captcha?goodsId=" + $("#goodsId").val());
-            $("#captchaImg").show();
-            //Show input field
-            $("#captcha").show();
+            // 验证码已经在状态变为1时显示，这里不需要重复显示
 
         } else if (flashSaleStatus == 2) {
             //Flash sale ended
@@ -288,15 +300,17 @@
         }
     }
 
-    //Format seconds to HH:MM:SS
+    //Format seconds to DD-HH:MM:SS
     function formatTime(seconds) {
-        var hours = Math.floor(seconds / 3600);
+        var days = Math.floor(seconds / 86400); // 86400 = 24 * 60 * 60
+        var hours = Math.floor((seconds % 86400) / 3600);
         var minutes = Math.floor((seconds % 3600) / 60);
         var secs = seconds % 60;
         
-        return (hours < 10 ? "0" : "") + hours + ":" + 
-               (minutes < 10 ? "0" : "") + minutes + ":" + 
-               (secs < 10 ? "0" : "") + secs;
+        return (days > 0 ? days + "d " : "") + 
+               (hours < 10 ? "0" : "") + hours + "h " + 
+               (minutes < 10 ? "0" : "") + minutes + "m " + 
+               (secs < 10 ? "0" : "") + secs + "s";
     }
 
     //Get remaining time until flash sale ends
@@ -319,17 +333,28 @@
         }
     }
 
-    //Get flash sale path through hidden interface
-    function getFlashSalePath() {
+
+    //Verify captcha
+    function verifyCaptcha() {
+        var captchaInput = $("#captcha").val();
+        if (!captchaInput) {
+            layer.msg("Please enter captcha");
+            return;
+        }
+        
+        // 验证码验证成功后，获取秒杀路径
+        getFlashSalePathWithCaptcha(captchaInput);
+    }
+
+    //Get flash sale path with captcha verification
+    function getFlashSalePathWithCaptcha(captcha) {
         var goodsId = $("#goodsId").val();
-        //Get user input captcha
-        var captcha = $("#captcha").val();
         $.ajax({
-            url: "/flashSale/path",
+            url: "/flashSale/getFlashSalePath",
             type: "GET",
             data: {
                 goodsId: goodsId,
-                captcha: captcha,
+                captcha: captcha
             },
             success: function (data) {
                 if (data.code == 200) {
@@ -339,6 +364,9 @@
                     doFlashSale(path);
                 } else {
                     layer.msg(data.message);
+                    // 验证码错误，刷新验证码
+                    $("#captchaImg").attr("src", "/flashSale/getCaptcha?goodsId=" + goodsId + "&t=" + new Date().getTime());
+                    $("#captcha").val("");
                 }
             },
             error: function () {
@@ -351,14 +379,16 @@
     function doFlashSale(path) {
         $.ajax({
             //Pay attention to path case sensitivity to avoid 404 errors
-            url: '/flashSale/' + path + '/doFlashSale',
+            url: '/flashSale/doFlashSale/' + path,
             type: 'POST',
             data: {
                 goodsId: $("#goodsId").val()
             },
             success: function (data) {
                 if (data.code == 200) {
-                    layer.msg("Flash sale result: " + data.message);
+                    // Flash sale request successful, start polling
+                    layer.msg("Flash sale request submitted, please wait...");
+                    startPolling();
                 } else {
                     layer.msg(data.message);
                 }
@@ -367,6 +397,55 @@
                 layer.msg("Client request error!", {time: 2000});
             }
         });
+    }
+
+    // Start polling for flash sale result
+    function startPolling() {
+        let pollCount = 0;
+        const maxPolls = 20; // Maximum 1 second (20 * 50ms)
+        const goodsId = $("#goodsId").val();
+        
+        function pollFlashSaleResult() {
+            pollCount++;
+            
+            $.ajax({
+                url: '/flashSale/getFlashSaleResult',
+                type: 'GET',
+                data: {
+                    goodsId: goodsId
+                },
+                success: function (data) {
+                    if (data.code === 200) {
+                        const result = data.object;
+                        
+                        if (result > 0) {
+                            // Flash sale successful
+                            layer.msg("Flash Sale Successful! Order ID: " + result);
+                            return;
+                        } else if (result === -1) {
+                            // Flash sale failed
+                            layer.msg("Flash Sale Failed, Please Try Again");
+                            return;
+                        } else if (result === 0) {
+                            // Still in queue, continue polling
+                            if (pollCount >= maxPolls) {
+                                layer.msg("Request Timeout, Please Try Again");
+                                return;
+                            }
+                            setTimeout(pollFlashSaleResult, 50);
+                        }
+                    } else {
+                        layer.msg("Query Failed: " + data.message);
+                    }
+                },
+                error: function () {
+                    layer.msg("Network Error, Please Try Again");
+                }
+            });
+        }
+        
+        // Start polling
+        setTimeout(pollFlashSaleResult, 50);
     }
 
 </script>

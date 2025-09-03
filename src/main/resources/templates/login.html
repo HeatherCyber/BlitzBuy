@@ -256,11 +256,11 @@
 <div class="container">
     <div class="welcome">
         <div class="pinkbox">
-            <!-- 登录表单 -->
+            <!-- Login Form -->
             <div class="signin">
                 <h1>BlitzBuy</h1>
                 <form class="more-padding" id="loginForm" method="post" autocomplete="off">
-                    <input style="background-color: darkgrey;" id="mobile" name="mobile" type="text" placeholder="Mobile Number"
+                    <input style="background-color: darkgrey;" id="mobile" name="mobile" type="text" placeholder="Phone Number (US/CN)"     
                            required="true"/>
                     <input style="background-color: darkgrey;" id="password" name="password" type="password"
                            placeholder="Password" required="true"/>
@@ -280,9 +280,9 @@
     }
 
     function doLogin() {
-        //得到用户在登录表单填写的密码
+        // Get the password from the login form
         var inputPass = $("#password").val();
-        //客户端盐
+        // Client salt
         var salt = g_passsword_salt;
         var str = "" + salt.charAt(0) + inputPass + salt.charAt(6);
         var password = md5(str);
@@ -300,8 +300,7 @@
             },
             success: function (data) {
                 if (data.code === 200) {
-                    //alert(data.message)
-                    //如果code是200,说明登录成功., 就直接进入到商品列表页
+                    // If code is 200, login successful, redirect to goods list page
                     window.location.href = "/goods/toList"
                 } else {
                     alert(data.message)

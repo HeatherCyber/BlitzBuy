@@ -11,6 +11,8 @@ import com.example.blitzbuy.pojo.Order;
 import com.example.blitzbuy.pojo.User;
 import com.example.blitzbuy.service.FlashSaleGoodsService;
 import com.example.blitzbuy.service.OrderService;
+import com.example.blitzbuy.util.MD5Util;
+import com.example.blitzbuy.util.UUIDUtil;
 import com.example.blitzbuy.vo.GoodsVo;
 
 import jakarta.annotation.Resource;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -159,7 +162,47 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return 0L;
     }
 
-   
+    @Override
+    public String createFlashSalePath(User user, Long goodsId) {
+        // Create a unique path for flash sale request
+        String path = MD5Util.md5(UUIDUtil.uuid());
+        // Save the path to Redis(key = flashSalePath:userID:goodsID, value = path)
+        String redisKey = "flashSalePath:" + user.getId() + ":" + goodsId;
+        // Set the path to expire in 60 seconds
+        redisTemplate.opsForValue().set(redisKey, path, 60, TimeUnit.SECONDS);
+        // Return the path
+        return path;
+    }
 
+    @Override
+    public Boolean checkFlashSalePath(User user, Long goodsId, String path) {
+        if(user == null || goodsId == null || path == null){
+            return false;
+        }
+        // get the request path from Redis
+        String redisKey = "flashSalePath:" + user.getId() + ":" + goodsId;
+        String redisPath = (String) redisTemplate.opsForValue().get(redisKey);
+       
+        // check if it matches the request path
+        return redisPath.equals(path);
+    }
+
+    /**
+     * Check the captcha
+     * @param user current user
+     * @param goodsId goods ID
+     * @param captcha captcha string input by user
+     * @return true if captcha is valid, false otherwise
+     */
+    @Override
+    public Boolean checkCaptcha(User user, Long goodsId, String captcha) {
+        if(user == null || goodsId == null || captcha == null){
+            return false;
+        }
+        // get the captcha from Redis
+        String redisCaptcha = (String) redisTemplate.opsForValue().get("captcha:" + user.getId() + ":" + goodsId);
+        // check if the captcha is valid
+        return captcha.equals(redisCaptcha);
+    }
     
 } 

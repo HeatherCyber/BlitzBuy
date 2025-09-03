@@ -7,7 +7,10 @@ import java.util.regex.Pattern;
 
 /**
  * @author Heather
- * @version 1.0
+ * @version 2.0
+ * 
+ * Utility class for validating phone numbers in multiple formats.
+ * Supports both Chinese and US phone number formats.
  */
 public class ValidatorUtil {
 
@@ -21,7 +24,7 @@ public class ValidatorUtil {
     );
 
     /**
-     * Validates a chinese phone number
+     * Validates phone numbers for both Chinese and US formats
      * @param mobile The phone number to validate
      * @return true if valid, false otherwise
      */
@@ -29,9 +32,40 @@ public class ValidatorUtil {
         if(!StringUtils.hasText(mobile)){
             return false;
         }
-        Matcher matcher = CN_PHONE_PATTERN.matcher(mobile);
-        return matcher.matches();
+        // First try US phone number format
+        Matcher usMatcher = US_PHONE_PATTERN.matcher(mobile);
+        if(usMatcher.matches()){
+            return true;
+        }
+        // Then try Chinese phone number format
+        Matcher cnMatcher = CN_PHONE_PATTERN.matcher(mobile);
+        return cnMatcher.matches();
+    }
 
+    /**
+     * Determines if a phone number is in US format
+     * @param mobile The phone number to check
+     * @return true if US format, false otherwise
+     */
+    public static boolean isUSMobile(String mobile){
+        if(!StringUtils.hasText(mobile)){
+            return false;
+        }
+        Matcher usMatcher = US_PHONE_PATTERN.matcher(mobile);
+        return usMatcher.matches();
+    }
+
+    /**
+     * Determines if a phone number is in Chinese format
+     * @param mobile The phone number to check
+     * @return true if Chinese format, false otherwise
+     */
+    public static boolean isChineseMobile(String mobile){
+        if(!StringUtils.hasText(mobile)){
+            return false;
+        }
+        Matcher cnMatcher = CN_PHONE_PATTERN.matcher(mobile);
+        return cnMatcher.matches();
     }
 
 }

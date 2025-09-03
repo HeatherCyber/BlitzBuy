@@ -30,5 +30,31 @@ public interface OrderService extends IService<Order> {
      *         - 0 if still in queue
      */
     Long getFlashSaleResult(Long userId, Long goodsId);
+
+    /**
+     * Create flash sale path for security check
+     * @param user current user
+     * @param goodsId goods ID
+     * @return path string
+     */
+    String createFlashSalePath(User user, Long goodsId);
+
+    /**
+     * Check the path 
+     * @param user current user
+     * @param goodsId goods ID
+     * @param path path string
+     * @return true if path is valid, false otherwise
+     */
+    Boolean checkFlashSalePath(User user, Long goodsId, String path);
+
+    /**
+     * Check the captcha
+     * @param user current user
+     * @param goodsId goods ID
+     * @param captcha captcha string
+     * @return true if captcha is valid, false otherwise
+     */
+    Boolean checkCaptcha(User user, Long goodsId, String captcha);
     
 } 

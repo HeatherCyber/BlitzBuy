@@ -31,7 +31,7 @@ public @interface IsMobile {
      * Defines the default error message template when validation fails
      * @return The error message template
      */
-    String message() default "Invalid phone number format";
+    String message() default "Invalid phone number format (US: +1-555-123-4567, CN: 13812345678)";
 
     /**
      * Determines if the field is mandatory

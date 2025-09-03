@@ -7,8 +7,15 @@ import com.example.blitzbuy.service.FlashSaleOrderService;
 import com.example.blitzbuy.service.OrderService;
 import com.example.blitzbuy.vo.GoodsVo;
 import com.example.blitzbuy.vo.RespBeanEnum;
+import com.google.code.kaptcha.Producer;
 import com.example.blitzbuy.vo.RespBean;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +26,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -30,11 +38,14 @@ import com.example.blitzbuy.rabbitmq.MQSender;
 import cn.hutool.json.JSONUtil;
 
 /**
- * version 4.0
+ * version 5.0
  * Flash Sale Controller: Handle user flash sale requests, return flash sale results
  * 1. Use Redis to pre-reduce inventory, solve high concurrency problems (version 3.0)
  * 2. Add local JVM memory check before pre-reducing inventory in Redis, reduce unnecessary Redis operations (version 3.0)
  * 3. Use message queue (RabbitMQ) to implement asynchronous processing of flash sale requests (version 4.0)
+ * 4. Update "/doFlashSale" to "/doFlashSale/{path}" : add unique flash sale path for security check (version 5.0)
+ * 5. Add captcha check to "/getFlashSalePath", avoid malicious requests (version 5.0)
+ * 
  */
 
 @Controller
@@ -56,53 +67,63 @@ public class FlashSaleController implements InitializingBean {
     @Resource
     private MQSender mqSender;
 
+    @Resource
+    private Producer captchaProducer;
+
     //Define a map to store the goods stock in local JVM memory, key: goodsId, value: hasStock
     private Map<Long, Boolean> goodsStockMap = new HashMap<>();
 
    
 
-    // Handle user flash sale request
-    @RequestMapping("/doFlashSale")
-    public String doFlashSale(Model model, User user, Long goodsId){
+    /**
+     * Do flash sale: Handle user flash sale request
+     * @param path flash sale path
+     * @param model model
+     * @param user current user
+     * @param goodsId goods id
+     * @return flash sale result
+     */
+    @RequestMapping("/doFlashSale/{path}")
+    @ResponseBody
+    public RespBean doFlashSale(@PathVariable String path, Model model, User user, Long goodsId){
 
-        // 0. Check if user is logged in
+        // 0-1. Check if user is logged in
         if( user == null){
-            return "login";
+            return RespBean.error(RespBeanEnum.SESSION_ERROR);
         }
-        model.addAttribute("user", user);
+       
+        // 0-2. Check if the path is valid
+        if(!orderService.checkFlashSalePath(user, goodsId, path)){
+            // If the path is invalid, return request illegal error
+            return RespBean.error(RespBeanEnum.REQUEST_ILLEGAL);
+        }
 
-        // Get goodsVo
+        // 0-3. Get goodsVo(database)
         GoodsVo goodsVo = goodsService.getGoodsVoByGoodsId(goodsId);
         
         // Flash sale logic
-
         // 1. Query promotional goods inventory(database)
         int stock = goodsVo.getFlashSaleStock();
         if(stock <= 0){ 
-            // If the inventory is less than or equal to 0, return flash sale failed
-            model.addAttribute("msg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
-            return "flashSaleFail";
+            // If the inventory is less than or equal to 0, return no stock error
+            return RespBean.error(RespBeanEnum.NO_STOCK);
         }
 
 
-        // 2. Check if user is repurchasing goods (check if the flash sale order exists in Redis)
+        // 2. Check if user is repurchasing goods (Redis)
         FlashSaleOrder flashSaleOrder = (FlashSaleOrder)redisTemplate.opsForValue().get("flashSaleOrder:" + user.getId() + ":" + goodsId);
         if(flashSaleOrder != null){ 
             // If the flash sale order exists in Redis, user has already successfully purchased
-            // Set a special flag to indicate already purchased
-            model.addAttribute("alreadyPurchased", true);
-            model.addAttribute("orderId", flashSaleOrder.getOrderId());
-            model.addAttribute("goodsId", goodsId);
-            return "flashSaleResult";
+            // Return repeat purchase error
+            return RespBean.error(RespBeanEnum.REPEAT_PURCHASE);
         }
 
 
         // 3. Optimization: Check if the inventory is marked as false in local JVM memory
         Boolean hasStock = goodsStockMap.get(goodsId);
         if(hasStock == null || !hasStock){
-            // If the inventory is marked as false in local JVM memory, return flash sale failed
-            model.addAttribute("msg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
-            return "flashSaleFail";
+            // If the inventory is marked as false in local JVM memory, return no stock error
+            return RespBean.error(RespBeanEnum.NO_STOCK);
         }
 
         // 4. Optimization: Pre-reduce inventory in Redis
@@ -118,18 +139,20 @@ public class FlashSaleController implements InitializingBean {
             // Also update local memory
             goodsStockMap.put(goodsId, goodsVo.getFlashSaleStock() > 0);
         }
-        
+        // Decrement the stock in Redis
         Long decrementedStock = redisTemplate.opsForValue().decrement(redisStockKey); 
         
         // If the inventory is less than 0
         if(decrementedStock < 0){ 
            
-            // set the goods stock to false
+            // Set the goods stock to false in local JVM memory
             goodsStockMap.put(goodsId, false);
 
-            // return flash sale failed
-            model.addAttribute("msg", RespBeanEnum.INSUFFICIENT_STOCK.getMessage());
-            return "flashSaleFail";
+            // Set the goods stock back to 0 in Redis
+            redisTemplate.opsForValue().set(redisStockKey, 0);
+
+            // Return no stock error
+            return RespBean.error(RespBeanEnum.NO_STOCK);
         }
 
         // 5. If not, do flash sale order asynchronously
@@ -147,8 +170,8 @@ public class FlashSaleController implements InitializingBean {
         // 5.2 Set goodsId for polling
         model.addAttribute("goodsId", goodsId);
 
-        // 5.3 Client can query order status by polling
-        return "flashSaleResult";
+        // 5.3 Return in queue message
+        return RespBean.error(RespBeanEnum.IN_QUEUE);
 
     }
 
@@ -183,6 +206,61 @@ public class FlashSaleController implements InitializingBean {
 
         Long result = orderService.getFlashSaleResult(user.getId(), goodsId);
         return RespBean.success(result);
+    }
+
+
+
+    @RequestMapping("/getFlashSalePath")
+    @ResponseBody
+    public RespBean getFlashSalePath(User user, Long goodsId, String captcha, HttpServletRequest request){
+        if(user == null || goodsId == null){
+            return RespBean.error(RespBeanEnum.SESSION_ERROR);
+        }
+
+
+        // check if the captcha is valid
+        if(!orderService.checkCaptcha(user, goodsId, captcha)){
+            return RespBean.error(RespBeanEnum.CAPTCHA_ERROR);
+        }
+        // Create a unique path for flash sale request
+        String path = orderService.createFlashSalePath(user, goodsId);
+        // Return the path
+        return RespBean.success(path);
+    }
+
+    // create kaptcha
+    @RequestMapping("/getCaptcha")
+    @ResponseBody
+    public void getCaptcha(HttpServletRequest request, HttpServletResponse response, User user, Long goodsId){
+        try {
+            // set response header
+            response.setContentType("image/jpeg");
+            response.setDateHeader("Expires", 0);
+            response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+            response.setHeader("Pragma", "no-cache");
+            
+            // create captcha text and image
+            String capText = captchaProducer.createText();
+            BufferedImage bi = captchaProducer.createImage(capText);
+
+            // Kaptcha will store captcha to session automatically, key: "KAPTCHA_SESSION_KEY" 
+
+            // also store captcha to Redis, key:captcha:userId:goodsId, value:captchaText
+            redisTemplate.opsForValue().set("captcha:" + user.getId() + ":" + goodsId, capText, 100, TimeUnit.SECONDS);
+            
+            // output captcha image
+            ServletOutputStream out = response.getOutputStream();
+            ImageIO.write(bi, "jpg", out);
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            try {
+                response.getWriter().write("Captcha generation failed");
+            } catch (Exception ex) {
+                // ignore write error
+            }
+        }
     }
 
     /**

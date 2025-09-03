@@ -19,15 +19,21 @@ public enum RespBeanEnum {
 
 //  response message related to login
     LOGIN_ERROR(500210,"Invalid user ID or password."),
-    BING_ERROR(500213,"Invalid request parameters"),
     MOBILE_ERROR(500211,"Invalid mobile number format."),
     USER_NOT_EXIST(500212,"User does not exist."),
+    BING_ERROR(500213,"Invalid request parameters."),
+    PASSWORD_UPDATE_FAIL(500214, "Password update failed."),
 
-// Flash sale module response messages
-    INSUFFICIENT_STOCK(500500, "Insufficient stock"),
-    REPEAT_ERROR(500501, "This item is limited to one per person"),
-    PASSWORD_UPDATE_FAIL(500502, "Password update failed."),
-    QUEUE_SUCCESS(500503, "Queueing, please wait...");
+//  response messages for flash sale module
+    NO_STOCK(500500, "No stock."),
+    REPEAT_PURCHASE(500501, "This product is limited to 1 per customer."),
+    IN_QUEUE(500503, "In queue, please wait..."),
+    REQUEST_ILLEGAL(500504, "Request illegal."),
+    SESSION_ERROR(500505, "Session error."),
+    CAPTCHA_ERROR(500506, "Captcha error."),
+    REQUEST_TOO_FREQUENT(500507, "Request too frequent, please try again later.");
+
+
 
     private final Integer code;
     private final String message;
