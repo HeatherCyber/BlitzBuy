@@ -333,30 +333,6 @@
         }
     }
 
-    //Get flash sale path through hidden interface (deprecated, use getFlashSalePathWithCaptcha instead)
-    function getFlashSalePath() {
-        var goodsId = $("#goodsId").val();
-        $.ajax({
-            url: "/flashSale/getFlashSalePath",
-            type: "GET",
-            data: {
-                goodsId: goodsId
-            },
-            success: function (data) {
-                if (data.code == 200) {
-                    //Extract the randomly generated path from server response
-                    var path = data.obj;
-                    //Execute flash sale method
-                    doFlashSale(path);
-                } else {
-                    layer.msg(data.message);
-                }
-            },
-            error: function () {
-                layer.msg("Client request error");
-            }
-        })
-    }
 
     //Verify captcha
     function verifyCaptcha() {

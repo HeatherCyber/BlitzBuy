@@ -1,6 +1,7 @@
 package com.example.blitzbuy.controller;
 
 import com.example.blitzbuy.pojo.FlashSaleOrder;
+import com.example.blitzbuy.config.AccessLimit;
 import com.example.blitzbuy.pojo.FlashSaleMessage;
 import com.example.blitzbuy.service.GoodsService;
 import com.example.blitzbuy.service.FlashSaleOrderService;
@@ -38,14 +39,14 @@ import com.example.blitzbuy.rabbitmq.MQSender;
 import cn.hutool.json.JSONUtil;
 
 /**
- * version 5.0
+ * version 6.0
  * Flash Sale Controller: Handle user flash sale requests, return flash sale results
  * 1. Use Redis to pre-reduce inventory, solve high concurrency problems (version 3.0)
  * 2. Add local JVM memory check before pre-reducing inventory in Redis, reduce unnecessary Redis operations (version 3.0)
  * 3. Use message queue (RabbitMQ) to implement asynchronous processing of flash sale requests (version 4.0)
  * 4. Update "/doFlashSale" to "/doFlashSale/{path}" : add unique flash sale path for security check (version 5.0)
  * 5. Add captcha check to "/getFlashSalePath", avoid malicious requests (version 5.0)
- * 
+ * 6. Add AccessLimit annotation to "/getFlashSalePath", avoid malicious requests (version 6.0)
  */
 
 @Controller
@@ -212,6 +213,7 @@ public class FlashSaleController implements InitializingBean {
 
     @RequestMapping("/getFlashSalePath")
     @ResponseBody
+    @AccessLimit(seconds = 5, maxCount = 5)
     public RespBean getFlashSalePath(User user, Long goodsId, String captcha, HttpServletRequest request){
         if(user == null || goodsId == null){
             return RespBean.error(RespBeanEnum.SESSION_ERROR);

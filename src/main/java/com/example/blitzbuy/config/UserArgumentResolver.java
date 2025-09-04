@@ -2,13 +2,9 @@ package com.example.blitzbuy.config;
 
 import com.example.blitzbuy.pojo.User;
 import com.example.blitzbuy.service.UserService;
-import com.example.blitzbuy.util.CookieUtil;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -49,12 +45,7 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-        HttpServletRequest nativeRequest = webRequest.getNativeRequest(HttpServletRequest.class);
-        HttpServletResponse nativeResponse = webRequest.getNativeResponse(HttpServletResponse.class);
-        String userTicket = CookieUtil.getCookieValue(nativeRequest, "userTicket");
-        if(!StringUtils.hasText(userTicket)){
-            return null;
-        }
-        return userService.getUserByCookie(userTicket, nativeRequest, nativeResponse);
+        // get the user from the thread local
+        return UserContext.getUser();
     }
 }
