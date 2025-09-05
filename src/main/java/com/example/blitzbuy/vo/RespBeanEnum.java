@@ -31,7 +31,8 @@ public enum RespBeanEnum {
     REQUEST_ILLEGAL(500504, "Request illegal."),
     SESSION_ERROR(500505, "Session error."),
     CAPTCHA_ERROR(500506, "Captcha error."),
-    REQUEST_TOO_FREQUENT(500507, "Request too frequent, please try again later.");
+    REQUEST_TOO_FREQUENT(500507, "Request too frequent, please try again later."),
+    TRY_AGAIN(500508, "Flash sale failed, please try again.");
 
 
 

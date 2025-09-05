@@ -6,6 +6,7 @@ import com.example.blitzbuy.pojo.FlashSaleMessage;
 import com.example.blitzbuy.service.GoodsService;
 import com.example.blitzbuy.service.FlashSaleOrderService;
 import com.example.blitzbuy.service.OrderService;
+import com.example.blitzbuy.util.UUIDUtil;
 import com.example.blitzbuy.vo.GoodsVo;
 import com.example.blitzbuy.vo.RespBeanEnum;
 import com.google.code.kaptcha.Producer;
@@ -15,9 +16,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.ServletOutputStream;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import javax.imageio.ImageIO;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,7 +41,7 @@ import com.example.blitzbuy.rabbitmq.MQSender;
 import cn.hutool.json.JSONUtil;
 
 /**
- * version 6.0
+ * version 7.0
  * Flash Sale Controller: Handle user flash sale requests, return flash sale results
  * 1. Use Redis to pre-reduce inventory, solve high concurrency problems (version 3.0)
  * 2. Add local JVM memory check before pre-reducing inventory in Redis, reduce unnecessary Redis operations (version 3.0)
@@ -47,6 +49,7 @@ import cn.hutool.json.JSONUtil;
  * 4. Update "/doFlashSale" to "/doFlashSale/{path}" : add unique flash sale path for security check (version 5.0)
  * 5. Add captcha check to "/getFlashSalePath", avoid malicious requests (version 5.0)
  * 6. Add AccessLimit annotation to "/getFlashSalePath", avoid malicious requests (version 6.0)
+ * 7. Update Mysql row-level lock to Redis distributed lock, ensure data consistency under more complex business logic or distributed deployment (version 7.0)
  */
 
 @Controller
@@ -70,6 +73,10 @@ public class FlashSaleController implements InitializingBean {
 
     @Resource
     private Producer captchaProducer;
+
+    @Resource
+    private RedisScript<Long> redisScript;
+
 
     //Define a map to store the goods stock in local JVM memory, key: goodsId, value: hasStock
     private Map<Long, Boolean> goodsStockMap = new HashMap<>();
@@ -134,29 +141,60 @@ public class FlashSaleController implements InitializingBean {
         // return the decremented stock
         
         // Check if Redis stock exists, if not, initialize it from database
-        String redisStockKey = "flashSaleStock:" + goodsId;
-        if (!redisTemplate.hasKey(redisStockKey)) {
-            redisTemplate.opsForValue().set(redisStockKey, goodsVo.getFlashSaleStock());
-            // Also update local memory
-            goodsStockMap.put(goodsId, goodsVo.getFlashSaleStock() > 0);
-        }
-        // Decrement the stock in Redis
-        Long decrementedStock = redisTemplate.opsForValue().decrement(redisStockKey); 
+        // String redisStockKey = "flashSaleStock:" + goodsId;
+        // if (!redisTemplate.hasKey(redisStockKey)) {
+        //     redisTemplate.opsForValue().set(redisStockKey, goodsVo.getFlashSaleStock());
+        //     // Also update local memory
+        //     goodsStockMap.put(goodsId, goodsVo.getFlashSaleStock() > 0);
+        // }
+        // // Decrement the stock in Redis
+        // Long decrementedStock = redisTemplate.opsForValue().decrement(redisStockKey); 
         
-        // If the inventory is less than 0
-        if(decrementedStock < 0){ 
+        // // If the inventory is less than 0
+        // if(decrementedStock < 0){ 
            
+        //     // Set the goods stock to false in local JVM memory
+        //     goodsStockMap.put(goodsId, false);
+
+        //     // Set the goods stock back to 0 in Redis
+        //     redisTemplate.opsForValue().set(redisStockKey, 0);
+
+        //     // Return no stock error
+        //     return RespBean.error(RespBeanEnum.NO_STOCK);
+        // }
+
+        //  4. 优化Mysql行锁方案：改用Redis分布式锁，解决分布式部署下的数据一致性问题
+        // 虽然decrement()已经足够处理本项目在单机环境下的业务需求，但如果考虑到分布式部署、多方服务调用、复杂业务逻辑等因素，就需要进一步扩大隔离性的范围
+        // 分布式锁的实现方式：使用Redis的setnx命令，对应setIfAbsent()方法
+        // key: lock:goodsId，value: 随机生成一个UUID，作为锁的值
+        String lockKey = "lock:" + goodsId;
+        String uuid = UUIDUtil.uuid();
+        // 如果key不存在，则设置key的值为value，并返回true，如果key存在，则返回false 
+        Boolean lock = redisTemplate.opsForValue().setIfAbsent(lockKey, uuid, 3, TimeUnit.SECONDS);
+        if(!lock){
+            // 如果锁已存在，获取锁失败，需要重试
+            return RespBean.error(RespBeanEnum.TRY_AGAIN);
+        }
+
+        // 如果锁不存在，获取锁成功，可以进行多项业务操作(此处仅需预减库存-1)
+        String redisStockKey = "flashSaleStock:" + goodsId;
+        Long decrementedStock = redisTemplate.opsForValue().decrement(redisStockKey);
+        if(decrementedStock < 0){ // If the inventory is less than 0
             // Set the goods stock to false in local JVM memory
             goodsStockMap.put(goodsId, false);
-
             // Set the goods stock back to 0 in Redis
             redisTemplate.opsForValue().set(redisStockKey, 0);
-
+            // Release the lock by LUA script
+            redisTemplate.execute(redisScript, Arrays.asList(lockKey), uuid);
             // Return no stock error
             return RespBean.error(RespBeanEnum.NO_STOCK);
+        
         }
+        // If the inventory is greater or equal to 0,still need to release the lock
+        redisTemplate.execute(redisScript, Arrays.asList(lockKey), uuid);
 
-        // 5. If not, do flash sale order asynchronously
+
+        // 5. Do flash sale order asynchronously
         // 5.1 Send flash sale message to RabbitMQ, MQReceiver will call orderService.creatFlashSaleOrder() asynchronously
         // 5.1.1 Create flash sale message
         FlashSaleMessage flashSaleMessage = new FlashSaleMessage(user, goodsId);
