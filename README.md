@@ -1,5 +1,13 @@
 # ⚡ BlitzBuy – High-Concurrency Flash Sale System
 
+![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=java)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen?style=flat-square&logo=spring-boot)
+![Redis](https://img.shields.io/badge/Redis-6.0+-red?style=flat-square&logo=redis)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.8+-orange?style=flat-square&logo=rabbitmq)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=flat-square&logo=mysql)
+![JMeter](https://img.shields.io/badge/JMeter-Load%20Testing-orange?style=flat-square&logo=apache-jmeter)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square&logo=mit)
+
 This project was developed as the **Capstone Project** for the Master of Software Engineering program, 
 under instructor guidance in a professional training environment.
 
@@ -71,6 +79,10 @@ These were discussed during the training but are not implemented in the current 
 
 - **README.md**: Project overview and setup guide
 - **API.md**: Complete API documentation with endpoints, parameters, and examples
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
