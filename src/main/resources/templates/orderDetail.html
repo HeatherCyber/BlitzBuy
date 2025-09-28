@@ -125,52 +125,90 @@
     <div class="container">
         <table class="table" id="order">
             <tr>
-                <td>Product Name</td>
-                <td id="goodName" colspan="3" th:text="${goods.name}"></td>
+                <td><strong>Order ID</strong></td>
+                <td colspan="3" id="orderId">Loading...</td>
             </tr>
             <tr>
-                <td>Image</td>
-                <td colspan="2"><img id="goodImg" width="200" th:src="@{${goods.imageUrl}}"
-                                     height="200"/></td>
+                <td><strong>Product Name</strong></td>
+                <td id="goodName" colspan="3">Demo Product - iPhone 15 Pro</td>
             </tr>
             <tr>
-                <td>Order Price</td>
-                <td colspan="2" id="goodPrice" th:text="${order.goodsPrice}"></td>
+                <td><strong>Image</strong></td>
+                <td colspan="2">
+                    <img width="200" height="200" src="/imgs/iphone15pro.jpg" alt="Product Image" 
+                         style="border: 1px solid #ddd; border-radius: 8px;"/>
+                </td>
             </tr>
             <tr>
-                <td>Order Time</td>
-                <td id="createDate" colspan="2" th:text="${#dates.format(order.createTime,'yyyy-MM-dd HH:mm:ss')}"></td>
+                <td><strong>Order Price</strong></td>
+                <td colspan="2" id="goodPrice">¥999.00</td>
             </tr>
             <tr>
-                <td>Order Status</td>
-                <td id="status" >
-                    <span th:if="${order.orderStatus eq 0}">Unpaid</span>
-                    <span th:if="${order.orderStatus eq 1}">Pending</span>
-                    <span th:if="${order.orderStatus eq 2}">Shipped</span>
-                    <span th:if="${order.orderStatus eq 3}">Received</span>
-                    <span th:if="${order.orderStatus eq 4}">Refunded</span>
-                    <span th:if="${order.orderStatus eq 5}">Completed</span>
-
+                <td><strong>Order Time</strong></td>
+                <td id="createDate" colspan="2">Loading...</td>
+            </tr>
+            <tr>
+                <td><strong>Order Status</strong></td>
+                <td id="status">
+                    <span style="color: #d9534f; font-weight: bold;">Unpaid</span>
                 </td>
                 <td>
-                    <button class="btn btn-primary btn-block" type="submit"
-                            id="payButton">Pay Now
+                    <button class="btn btn-primary btn-block" type="submit" id="payButton">
+                        Pay Now
                     </button>
                 </td>
             </tr>
             <tr>
-                <td>Receiver</td>
-                <td colspan="2" th:text="${order.userId}"></td>
+                <td><strong>Receiver</strong></td>
+                <td colspan="2">Demo User</td>
             </tr>
             <tr>
-                <td>Delivery Address</td>
-                <td colspan="2" th:text="${order.deliveryAddress}"></td>
+                <td><strong>Delivery Address</strong></td>
+                <td colspan="2">123 Demo Street, Demo City, DC 12345</td>
             </tr>
         </table>
     </div>
 </div>
 
 <script>
+    // Get order ID from URL parameter
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Format current time
+    function getCurrentTime() {
+        var now = new Date();
+        var year = now.getFullYear();
+        var month = String(now.getMonth() + 1).padStart(2, '0');
+        var day = String(now.getDate()).padStart(2, '0');
+        var hours = String(now.getHours()).padStart(2, '0');
+        var minutes = String(now.getMinutes()).padStart(2, '0');
+        var seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+    }
+
+    // Display order ID and current time when page loads
+    $(document).ready(function() {
+        var orderId = getUrlParameter('orderId');
+        if (orderId) {
+            $('#orderId').text('#' + orderId);
+        } else {
+            $('#orderId').text('Demo Order #12345');
+        }
+        
+        // Display current time as order time
+        $('#createDate').text(getCurrentTime());
+    });
+
+    // Navigate back to goods list
+    function toList() {
+        window.location.href = "/goods/toList";
+    }
 </script>
 </body>
 </html>

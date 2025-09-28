@@ -357,9 +357,13 @@
                 captcha: captcha
             },
             success: function (data) {
+                console.log("Get flash sale path response:", data);
                 if (data.code == 200) {
                     //Extract the randomly generated path from server response
-                    var path = data.obj;
+                    var path = data.object;
+                    console.log("Extracted path:", path);
+                    console.log("Path type:", typeof path);
+                    console.log("Path is undefined:", path === undefined);
                     //Execute flash sale method
                     doFlashSale(path);
                 } else {
@@ -386,9 +390,13 @@
             },
             success: function (data) {
                 if (data.code == 200) {
-                    // Flash sale request successful, start polling
-                    layer.msg("Flash sale request submitted, please wait...");
-                    startPolling();
+                    // Flash sale successful
+                    layer.msg("Flash Sale Successful! Redirecting to order detail...");
+                    
+                    // Simple redirect to order detail page with order ID
+                    setTimeout(function() {
+                        window.location.href = "/order/detail?orderId=" + data.object;
+                    }, 1500);
                 } else {
                     layer.msg(data.message);
                 }
@@ -399,54 +407,6 @@
         });
     }
 
-    // Start polling for flash sale result
-    function startPolling() {
-        let pollCount = 0;
-        const maxPolls = 20; // Maximum 1 second (20 * 50ms)
-        const goodsId = $("#goodsId").val();
-        
-        function pollFlashSaleResult() {
-            pollCount++;
-            
-            $.ajax({
-                url: '/flashSale/getFlashSaleResult',
-                type: 'GET',
-                data: {
-                    goodsId: goodsId
-                },
-                success: function (data) {
-                    if (data.code === 200) {
-                        const result = data.object;
-                        
-                        if (result > 0) {
-                            // Flash sale successful
-                            layer.msg("Flash Sale Successful! Order ID: " + result);
-                            return;
-                        } else if (result === -1) {
-                            // Flash sale failed
-                            layer.msg("Flash Sale Failed, Please Try Again");
-                            return;
-                        } else if (result === 0) {
-                            // Still in queue, continue polling
-                            if (pollCount >= maxPolls) {
-                                layer.msg("Request Timeout, Please Try Again");
-                                return;
-                            }
-                            setTimeout(pollFlashSaleResult, 50);
-                        }
-                    } else {
-                        layer.msg("Query Failed: " + data.message);
-                    }
-                },
-                error: function () {
-                    layer.msg("Network Error, Please Try Again");
-                }
-            });
-        }
-        
-        // Start polling
-        setTimeout(pollFlashSaleResult, 50);
-    }
 
 </script>
 </html>

@@ -111,56 +111,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return order;
     }
 
-    @Override
-    public Long getFlashSaleResult(Long userId, Long goodsId) {
-        // Check if flash sale order exists in Redis
-        FlashSaleOrder flashSaleOrder = (FlashSaleOrder) redisTemplate.opsForValue().get("flashSaleOrder:" + userId + ":" + goodsId);
-        
-        if (flashSaleOrder != null) {
-            // Flash sale successful, return orderId
-            return flashSaleOrder.getOrderId();
-        }
-
-        // Check if there's a failure message in Redis
-        String failureKey = "flashSaleFail:" + userId + ":" + goodsId;
-        String failureResult = (String) redisTemplate.opsForValue().get(failureKey);
-        
-        if (failureResult != null) {
-            // Flash sale failed, return -1
-            return -1L;
-        }
-        
-        // Check if message was sent to queue
-        String messageSentKey = "flashSaleMessageSent:" + userId + ":" + goodsId;
-        String messageSent = (String) redisTemplate.opsForValue().get(messageSentKey);
-        
-        if (messageSent == null) {
-            // Message was not sent, mark as failed
-            redisTemplate.opsForValue().set(failureKey, "0", 60, TimeUnit.SECONDS);
-            return -1L;
-        }
-
-        // Check for timeout - if user has been polling for too long, mark as failed
-        String timeoutKey = "flashSaleTimeout:" + userId + ":" + goodsId;
-        String startTime = (String) redisTemplate.opsForValue().get(timeoutKey);
-        
-        if (startTime == null) {
-            // First time polling, set start time
-            redisTemplate.opsForValue().set(timeoutKey, String.valueOf(System.currentTimeMillis()), 5, TimeUnit.SECONDS);
-        } else {
-            // Check if polling has been going on for more than 1 second
-            long elapsedTime = System.currentTimeMillis() - Long.parseLong(startTime);
-            if (elapsedTime > 1000) { // 1 second timeout
-                // Mark as failed due to timeout
-                redisTemplate.opsForValue().set(failureKey, "0", 60, TimeUnit.SECONDS);
-                redisTemplate.delete(timeoutKey);
-                return -1L;
-            }
-        }
-
-        // Still in queue, return 0
-        return 0L;
-    }
 
     @Override
     public String createFlashSalePath(User user, Long goodsId) {
@@ -179,12 +129,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if(user == null || goodsId == null || path == null){
             return false;
         }
+        
         // get the request path from Redis
         String redisKey = "flashSalePath:" + user.getId() + ":" + goodsId;
         String redisPath = (String) redisTemplate.opsForValue().get(redisKey);
-       
+        
         // check if it matches the request path
-        return redisPath.equals(path);
+        return redisPath != null && redisPath.equals(path);
     }
 
     /**

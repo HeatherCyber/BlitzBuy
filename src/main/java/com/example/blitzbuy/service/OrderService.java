@@ -20,16 +20,6 @@ public interface OrderService extends IService<Order> {
      */
     Order creatFlashSaleOrder(User user, GoodsVo goodsVo);
     
-    /**
-     * Get flash sale result for polling
-     * @param userId user ID
-     * @param goodsId goods ID
-     * @return result:
-     *         - orderId if flash sale successful
-     *         - -1 if flash sale failed
-     *         - 0 if still in queue
-     */
-    Long getFlashSaleResult(Long userId, Long goodsId);
 
     /**
      * Create flash sale path for security check
