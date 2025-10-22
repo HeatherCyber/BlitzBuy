@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * 消息服务实现类
+ * Message Service Implementation Class
  */
 @Slf4j
 @Service
@@ -25,10 +25,10 @@ public class MessageServiceImpl implements MessageService {
                     RabbitMQConfig.FLASH_SALE_ROUTING_KEY,
                     message
             );
-            log.info("秒杀消息发送成功: {}", message);
+            log.info("Flash sale message sent successfully: {}", message);
         } catch (Exception e) {
-            log.error("秒杀消息发送失败: {}", message, e);
-            throw new RuntimeException("消息发送失败", e);
+            log.error("Flash sale message sending failed: {}", message, e);
+            throw new RuntimeException("Message sending failed", e);
         }
     }
 
@@ -44,10 +44,10 @@ public class MessageServiceImpl implements MessageService {
                         return msg;
                     }
             );
-            log.info("延迟秒杀消息发送成功: {}, 延迟: {}ms", message, delayMillis);
+            log.info("Delayed flash sale message sent successfully: {}, delay: {}ms", message, delayMillis);
         } catch (Exception e) {
-            log.error("延迟秒杀消息发送失败: {}", message, e);
-            throw new RuntimeException("延迟消息发送失败", e);
+            log.error("Delayed flash sale message sending failed: {}", message, e);
+            throw new RuntimeException("Delayed message sending failed", e);
         }
     }
 }

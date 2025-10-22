@@ -31,7 +31,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 
@@ -165,31 +164,31 @@ public class FlashSaleController implements InitializingBean {
         //     return RespBean.error(RespBeanEnum.NO_STOCK);
         // }
 
-        //  4. 优化Mysql行锁方案：改用Redis分布式锁，解决分布式部署下的数据一致性问题
-        // 虽然decrement()已经足够处理本项目在单机环境下的业务需求，但如果考虑到分布式部署、多方服务调用、复杂业务逻辑等因素，就需要进一步扩大隔离性的范围
-        // 分布式锁的实现方式：使用Redis的setnx命令，对应setIfAbsent()方法
-        // key: lock:goodsId，value: 随机生成一个UUID，作为锁的值
+        // 4. Optimize MySQL row lock solution: Use Redis distributed lock to solve data consistency issues in distributed deployment
+        // Although decrement() is sufficient to handle the business requirements of this project in a single-machine environment, if considering distributed deployment, multi-party service calls, complex business logic and other factors, we need to further expand the scope of isolation
+        // Distributed lock implementation: Use Redis setnx command, corresponding to setIfAbsent() method
+        // key: lock:goodsId, value: randomly generated UUID as lock value
         String lockKey = "lock:" + goodsId;
         String uuid = UUIDUtil.uuid();
-        // 如果key不存在，则设置key的值为value，并返回true，如果key存在，则返回false 
-        // 优化：将锁超时时间从3秒延长到5秒，提高高并发下的成功率
+        // If key does not exist, set key value to value and return true; if key exists, return false
+        // Optimization: Extend lock timeout from 3 seconds to 5 seconds to improve success rate under high concurrency
         Boolean lock = redisTemplate.opsForValue().setIfAbsent(lockKey, uuid, 5, TimeUnit.SECONDS);
         if(!lock){
-            // 如果锁已存在，获取锁失败，尝试重试一次
+            // If lock already exists, lock acquisition failed, try retry once
             try {
-                Thread.sleep(10); // 等待10毫秒后重试，优化等待时间
+                Thread.sleep(10); // Wait 10 milliseconds before retry, optimize wait time
                 lock = redisTemplate.opsForValue().setIfAbsent(lockKey, uuid, 5, TimeUnit.SECONDS);
                 if(!lock){
-                    // 重试后仍然失败，返回重试错误
+                    // Still failed after retry, return retry error
                     return RespBean.error(RespBeanEnum.TRY_AGAIN);
                 }
             } catch (InterruptedException e) {
-                // 线程被中断，返回重试错误
+                // Thread interrupted, return retry error
                 return RespBean.error(RespBeanEnum.TRY_AGAIN);
             }
         }
 
-        // 如果锁不存在，获取锁成功，可以进行多项业务操作(此处仅需预减库存-1)
+        // If lock does not exist, lock acquisition successful, can perform multiple business operations (here only need to pre-reduce inventory by 1)
         String redisStockKey = "flashSaleStock:" + goodsId;
         Long decrementedStock = redisTemplate.opsForValue().decrement(redisStockKey);
         if(decrementedStock < 0){ // If the inventory is less than 0
@@ -299,7 +298,7 @@ public class FlashSaleController implements InitializingBean {
 
     /**
      * Initialize flash sale stock in Redis
-     * （This method is executed after all properties of the class are initialized）
+     * (This method is executed after all properties of the class are initialized)
      */
     @Override
     public void afterPropertiesSet() throws Exception {

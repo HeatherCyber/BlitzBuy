@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import java.util.Properties;
 
 /**
- * Kaptcha验证码配置类
- * 配置验证码的样式、字体、颜色等属性
+ * Kaptcha Captcha Configuration Class
+ * Configure captcha style, font, color and other properties
  */
 @Configuration
 public class KaptchaConfig {
@@ -19,30 +19,30 @@ public class KaptchaConfig {
         DefaultKaptcha defaultKaptcha = new DefaultKaptcha();
         Properties properties = new Properties();
         
-        // 验证码图片宽度
+        // Captcha image width
         properties.setProperty("kaptcha.image.width", "160");
-        // 验证码图片高度
+        // Captcha image height
         properties.setProperty("kaptcha.image.height", "50");
-        // 验证码字符长度
+        // Captcha character length
         properties.setProperty("kaptcha.textproducer.char.length", "5");
-        // 验证码字符范围
+        // Captcha character range
         properties.setProperty("kaptcha.textproducer.char.string", "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-        // 验证码字体大小
+        // Captcha font size
         properties.setProperty("kaptcha.textproducer.font.size", "30");
-        // 验证码字体颜色
+        // Captcha font color
         properties.setProperty("kaptcha.textproducer.font.color", "black");
-        // 验证码背景颜色
+        // Captcha background color
         properties.setProperty("kaptcha.background.clear.from", "white");
         properties.setProperty("kaptcha.background.clear.to", "white");
-        // 验证码边框
+        // Captcha border
         properties.setProperty("kaptcha.border", "yes");
         properties.setProperty("kaptcha.border.color", "105,179,90");
         properties.setProperty("kaptcha.border.thickness", "1");
-        // 验证码干扰线
+        // Captcha noise lines
         properties.setProperty("kaptcha.noise.impl", "com.google.code.kaptcha.impl.NoNoise");
-        // 验证码文字渲染器
+        // Captcha text renderer
         properties.setProperty("kaptcha.textproducer.impl", "com.google.code.kaptcha.text.impl.DefaultTextCreator");
-        // 验证码图片样式
+        // Captcha image style
         properties.setProperty("kaptcha.obscurificator.impl", "com.google.code.kaptcha.impl.WaterRipple");
         
         Config config = new Config(properties);

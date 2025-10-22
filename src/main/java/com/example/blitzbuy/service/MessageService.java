@@ -1,21 +1,21 @@
 package com.example.blitzbuy.service;
 
 /**
- * 消息服务接口
- * 用于处理RabbitMQ消息的发送
+ * Message Service Interface
+ * Used for handling RabbitMQ message sending
  */
 public interface MessageService {
 
     /**
-     * 发送秒杀消息
-     * @param message 消息内容
+     * Send flash sale message
+     * @param message message content
      */
     void sendFlashSaleMessage(String message);
 
     /**
-     * 发送秒杀消息（带延迟）
-     * @param message 消息内容
-     * @param delayMillis 延迟时间（毫秒）
+     * Send flash sale message (with delay)
+     * @param message message content
+     * @param delayMillis delay time (milliseconds)
      */
     void sendFlashSaleMessageWithDelay(String message, long delayMillis);
 }
