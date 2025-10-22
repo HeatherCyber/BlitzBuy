@@ -18,9 +18,9 @@ public class ValidatorUtil {
     private static final Pattern CN_PHONE_PATTERN =
             Pattern.compile("^(?:(?:\\+|00)86)?1[3-9]\\d{9}$");
 
-    //Pre-compile the pattern for us mobile format
+    //Pre-compile the pattern for us mobile format (11 digits starting with 1)
     private static final Pattern US_PHONE_PATTERN = Pattern.compile(
-            "^(\\+1\\s?)?(\\([2-9]\\d{2}\\)\\s?|[2-9]\\d{2}[\\s\\-]?)\\d{3}[\\s\\-]?\\d{4}$"
+            "^1[2-9]\\d{2}[2-9]\\d{2}\\d{4}$"
     );
 
     /**
@@ -60,7 +60,7 @@ public class ValidatorUtil {
      * @param mobile The phone number to check
      * @return true if Chinese format, false otherwise
      */
-    public static boolean isChineseMobile(String mobile){
+    public static boolean isChineseMobile(String mobile) {
         if(!StringUtils.hasText(mobile)){
             return false;
         }

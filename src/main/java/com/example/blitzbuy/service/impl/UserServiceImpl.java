@@ -67,8 +67,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // Check user existence
         User user = userMapper.selectById(id);
         if(user == null){
-//            return RespBean.error(RespBeanEnum.LOGIN_ERROR);
-            throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
+            return RespBean.error(RespBeanEnum.LOGIN_ERROR);
         }
         //Validate password
         if(!MD5Util.midPassToDBPass(password, user.getSalt()).equals(user.getPassword())){
@@ -80,12 +79,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // Save ticket-user as key-value pair to session
         //httpServletRequest.getSession().setAttribute(ticket, user);
 
-        System.out.println("Using redisTemplate");
         // For distributed session management, store successfully logged in user info in Redis
         // Storage format: key ("userTicket:UUID number")
         // Storage format: value (user object)
         redisTemplate.opsForValue().set("userTicket:"+ticket, user);
-        System.out.println("Using redisTemplate finished ");
         // Also save ticket to cookie with key-value: "userTicket"-ticket
         CookieUtil.setCookie(request, response, "userTicket", ticket);
 

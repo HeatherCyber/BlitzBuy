@@ -38,10 +38,6 @@ public class LoginController {
     public RespBean doLogin(@Valid LoginVo loginVo,
                             HttpServletRequest request,
                             HttpServletResponse response){
-
-        System.out.println("Request has arrived");
-        System.out.println(loginVo);
         return userService.doLogin(loginVo, request, response);
-
     }
 }

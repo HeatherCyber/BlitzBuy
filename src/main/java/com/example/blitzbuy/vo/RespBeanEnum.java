@@ -32,7 +32,10 @@ public enum RespBeanEnum {
     SESSION_ERROR(500505, "Session error."),
     CAPTCHA_ERROR(500506, "Captcha error."),
     REQUEST_TOO_FREQUENT(500507, "Request too frequent, please try again later."),
-    TRY_AGAIN(500508, "Flash sale failed, please try again.");
+    TRY_AGAIN(500508, "Flash sale failed, please try again."),
+    GOODS_NOT_EXIST(500509, "Goods not found."),
+    ORDER_NOT_EXIST(500510, "Order not found."),
+    ACCESS_DENIED(500511, "Access denied.");
 
 
 

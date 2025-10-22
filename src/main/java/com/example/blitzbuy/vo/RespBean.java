@@ -49,4 +49,9 @@ public class RespBean {
         );
     }
 
+    // if error,response 'error' with custom message
+    public static RespBean error(long code, String message){
+        return new RespBean(code, message, null);
+    }
+
 }
