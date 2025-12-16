@@ -80,6 +80,14 @@ These were discussed during the training but are not implemented in the current 
 - **README.md**: Project overview and setup guide
 - **API.md**: Complete API documentation with endpoints, parameters, and examples
 
+## 📹 Presentation Materials
+
+Project presentation video is available in the [Releases](https://github.com/HeatherCyber/BlitzBuy/releases) section:
+
+- **Video Presentation**: 50-minute project overview, architecture walkthrough, live demo, and JMeter load testing demonstration
+
+📥 **Download**: Visit the [latest release](https://github.com/HeatherCyber/BlitzBuy/releases/latest) to download the video.
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
