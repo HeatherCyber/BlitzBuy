@@ -100,6 +100,16 @@ export const flashSaleAPI = {
   checkPurchase: (goodsId: number): Promise<RespBean> => {
     return api.get(`/flash-sale/check-purchase/${goodsId}`);
   },
+  // New async flash sale purchase (sends to RabbitMQ queue)
+  purchase: async (path: string, goodsId: number): Promise<RespBean> => {
+    return api.post('/flash-sale/purchase', null, {
+      params: { path, goodsId },
+    });
+  },
+  // Get flash sale result (for polling)
+  getResult: (goodsId: number): Promise<RespBean> => {
+    return api.get(`/flash-sale/result/${goodsId}`);
+  },
 };
 
 // Order API

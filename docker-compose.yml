@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: blitzbuy-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass foobared
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - blitzbuy-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: blitzbuy-rabbitmq
+    ports:
+      - "5672:5672"      # AMQP port
+      - "15672:15672"    # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: unless-stopped
+    networks:
+      - blitzbuy-network
+
+volumes:
+  redis-data:
+  rabbitmq-data:
+
+networks:
+  blitzbuy-network:
+    driver: bridge
+

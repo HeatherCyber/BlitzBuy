@@ -58,3 +58,19 @@ CREATE TABLE `goods` (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品基础信息表';
+
+-- 创建秒杀商品表
+CREATE TABLE `flash_sale_goods` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '秒杀商品ID',
+  `goods_id` BIGINT NOT NULL COMMENT '商品ID',
+  `flash_sale_price` DECIMAL(10,2) NOT NULL COMMENT '秒杀价格',
+  `flash_sale_stock` INT NOT NULL COMMENT '秒杀库存',
+  `start_time` DATETIME NOT NULL COMMENT '秒杀开始时间',
+  `end_time` DATETIME NOT NULL COMMENT '秒杀结束时间',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否激活(1:激活 0:未激活)',
+  PRIMARY KEY (`id`),
+  INDEX `idx_goods_id` (`goods_id`),
+  INDEX `idx_start_time` (`start_time`),
+  INDEX `idx_end_time` (`end_time`),
+  FOREIGN KEY (`goods_id`) REFERENCES `goods`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='秒杀商品表';

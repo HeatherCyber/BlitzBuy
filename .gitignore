@@ -16,3 +16,31 @@ buildNumber.properties
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 /target/
+
+# Frontend
+frontend/blitzbuy-frontend/node_modules/
+frontend/blitzbuy-frontend/build/
+frontend/blitzbuy-frontend/.env.local
+frontend/blitzbuy-frontend/.env.development.local
+frontend/blitzbuy-frontend/.env.test.local
+frontend/blitzbuy-frontend/.env.production.local
+frontend/blitzbuy-frontend/npm-debug.log*
+frontend/blitzbuy-frontend/yarn-debug.log*
+frontend/blitzbuy-frontend/yarn-error.log*
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~

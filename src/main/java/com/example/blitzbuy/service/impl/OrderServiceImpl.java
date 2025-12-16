@@ -72,7 +72,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             redisTemplate.opsForValue().increment("flashSaleStock:" + goodsVo.getId());
             
             // Save the failure information to Redis(key = flashSaleFail:userID:goodsID, value = 0)
-            redisTemplate.opsForValue().set("flashSaleFail:" + user.getId() + ":" + goodsVo.getId(), "0");
+            redisTemplate.opsForValue().set("flashSaleFail:" + user.getId() + ":" + goodsVo.getId(), "0", 60, TimeUnit.SECONDS);
             // Return null
             return null;
         }

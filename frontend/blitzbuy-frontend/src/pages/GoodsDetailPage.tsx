@@ -202,27 +202,96 @@ const GoodsDetailPage: React.FC = () => {
 
     setFlashSaleLoading(true);
     try {
-      const response = await flashSaleAPI.doFlashSale(flashSalePath, Number(id));
+      // Use new async purchase API (sends to RabbitMQ)
+      const response = await flashSaleAPI.purchase(flashSalePath, Number(id));
       
       if (response && response.code === 200) {
-        message.success('Flash sale successful! Redirecting to order...');
-        setHasPurchased(true); // Mark as purchased
-        setTimeout(() => {
+        // Immediate success (shouldn't happen with async, but handle it)
+        setFlashSaleLoading(false);
+        message.success('Flash sale successful!');
+        // Navigate immediately
           navigate(`/order/${response.object}`);
-        }, 1500);
+        return;
       } else if (response && response.code === 500501) {
         // REPEAT_PURCHASE error
         message.error('You have already purchased this flash sale item. Limited to 1 per customer.');
         setHasPurchased(true);
+        setFlashSaleLoading(false);
+        return;
       } else if (response && response.code === 500500) {
         // NO_STOCK error
         message.error('Sorry, this item is out of stock. Please try another item.');
+        setFlashSaleLoading(false);
+        return;
+      } else if (response && response.code === 500503) {
+        // IN_QUEUE - start polling for result
+        message.info('Your request is being processed, please wait...');
+        
+        // Poll for result with exponential backoff
+        const pollResult = async (): Promise<void> => {
+          const maxAttempts = 20; // Maximum 20 attempts (reduced due to exponential backoff)
+          const maxTimeout = 30000; // Maximum 30 seconds total
+          let attempts = 0;
+          let pollInterval = 500; // Start with 500ms (faster initial response)
+          const maxInterval = 2000; // Maximum 2000ms interval
+          const startTime = Date.now();
+          let timeoutId: NodeJS.Timeout | null = null;
+          
+          const poll = async (): Promise<void> => {
+            // Check timeout
+            if (Date.now() - startTime > maxTimeout) {
+              setFlashSaleLoading(false);
+              message.error('Request timeout. Please try again.');
+              return;
+            }
+            
+            attempts++;
+            
+            try {
+              const resultResponse = await flashSaleAPI.getResult(Number(id));
+              
+              if (resultResponse && resultResponse.code === 200) {
+                // Success - order created - immediately redirect
+                setFlashSaleLoading(false);
+                message.success('Flash sale successful!');
+                // Navigate immediately without setting hasPurchased to avoid page refresh
+                navigate(`/order/${resultResponse.object}`);
+              } else if (resultResponse && resultResponse.code === 500500) {
+                // Failed - no stock
+                setFlashSaleLoading(false);
+                message.error('Sorry, this item is out of stock. Please try another item.');
+              } else if (resultResponse && resultResponse.code === 500503) {
+                // Still in queue - continue polling with exponential backoff
+                if (attempts >= maxAttempts) {
+                  setFlashSaleLoading(false);
+                  message.error('Request timeout. Please try again.');
+                } else {
+                  // Exponential backoff: increase interval by 1.5x each time, max 2000ms
+                  pollInterval = Math.min(Math.floor(pollInterval * 1.5), maxInterval);
+                  timeoutId = setTimeout(poll, pollInterval);
+                }
+              } else {
+                // Other error
+                setFlashSaleLoading(false);
+                message.error(resultResponse?.message || 'Flash sale failed');
+              }
+            } catch (error: any) {
+              setFlashSaleLoading(false);
+              message.error('Error checking flash sale result');
+            }
+          };
+          
+          // Start polling immediately
+          await poll();
+        };
+        
+        await pollResult();
       } else {
         message.error(response?.message || 'Flash sale failed');
+        setFlashSaleLoading(false);
       }
     } catch (error: any) {
       message.error('Flash sale failed');
-    } finally {
       setFlashSaleLoading(false);
     }
   };

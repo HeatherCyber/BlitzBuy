@@ -70,14 +70,19 @@ public class MQReceiver {
             if (goodsVo == null) {
                 log.error("Goods not found for goodsId: {}", goodsId);
                 // Mark as failed in Redis
-                redisTemplate.opsForValue().set("flashSaleFail:" + user.getId() + ":" + goodsId, "0");
+                redisTemplate.opsForValue().set("flashSaleFail:" + user.getId() + ":" + goodsId, "0", 60, TimeUnit.SECONDS);
                 return;
             }
+            
+            log.info("Processing flash sale order for user: {}, goodsId: {}, goodsName: {}", user.getId(), goodsId, goodsVo.getName());
             
             // Create an order
             Order order = orderService.creatFlashSaleOrder(user, goodsVo);
             if (order == null) {
                 log.error("Failed to create flash sale order for user: {}, goodsId: {}", user.getId(), goodsId);
+                // Rollback Redis stock since order creation failed
+                // Note: OrderServiceImpl may have already rolled back, but we do it here as a safety measure
+                redisTemplate.opsForValue().increment("flashSaleStock:" + goodsId);
                 // Mark as failed in Redis
                 redisTemplate.opsForValue().set("flashSaleFail:" + user.getId() + ":" + goodsId, "0", 60, TimeUnit.SECONDS);
             } else {
@@ -86,14 +91,18 @@ public class MQReceiver {
             
         } catch (Exception e) {
             log.error("Error processing flash sale message: {}", message, e);
-            // Try to extract user and goodsId for failure marking
+            // Try to extract user and goodsId for failure marking and stock rollback
             try {
                 FlashSaleMessage flashSaleMessage = JSONUtil.toBean(message, FlashSaleMessage.class);
                 if (flashSaleMessage != null && flashSaleMessage.getUser() != null && flashSaleMessage.getGoodsId() != null) {
-                    redisTemplate.opsForValue().set("flashSaleFail:" + flashSaleMessage.getUser().getId() + ":" + flashSaleMessage.getGoodsId(), "0");
+                    // Rollback Redis stock since order creation failed
+                    redisTemplate.opsForValue().increment("flashSaleStock:" + flashSaleMessage.getGoodsId());
+                    // Mark as failed in Redis
+                    redisTemplate.opsForValue().set("flashSaleFail:" + flashSaleMessage.getUser().getId() + ":" + flashSaleMessage.getGoodsId(), "0", 60, TimeUnit.SECONDS);
+                    log.info("Marked flash sale as failed and rolled back stock for user: {}, goodsId: {}", flashSaleMessage.getUser().getId(), flashSaleMessage.getGoodsId());
                 }
             } catch (Exception ex) {
-                log.error("Failed to mark flash sale as failed", ex);
+                log.error("Failed to mark flash sale as failed and rollback stock", ex);
             }
         }
     }

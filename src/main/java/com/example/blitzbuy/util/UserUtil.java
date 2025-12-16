@@ -85,8 +85,8 @@ public class UserUtil {
         // Simulate login, send login request to get userTicket
         // Specify the login interface address
         String urlStr = "http://localhost:9090/login/doLogin";
-        // Specify file path: on Mac, the file path is /Users/heatherwang/Desktop/config.txt
-        File file = new File("/Users/heatherwang/Desktop/config.txt");
+        // Specify file path: on Mac, the file path is /Users/heather/Desktop/config.txt
+        File file = new File("/Users/heather/Desktop/config.txt");
 
         if (file.exists()) {
             file.delete();
@@ -202,14 +202,53 @@ public class UserUtil {
     }
 
     public static void main(String[] args) throws Exception {
-        // Example usage:
+        // Support command line argument for user count
+        // Usage: java UserUtil [count]
+        // Example: java UserUtil 5000 (creates 5000 users)
+        // Default: 2000 users (1000 CN + 1000 US)
         
-        // Create 1000 users with Chinese mobile numbers (original format)
-        // createCNPhone(1000);
+        int totalCount = 2000; // Default value
         
-        // Create 1000 users with US mobile numbers (original format)
-        createUSPhone(1000);
+        if (args.length > 0) {
+            try {
+                totalCount = Integer.parseInt(args[0]);
+                if (totalCount <= 0) {
+                    System.out.println("Error: User count must be positive. Using default: 2000");
+                    totalCount = 2000;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Invalid number format. Using default: 2000");
+                totalCount = 2000;
+            }
+        }
         
+        // Split users between CN and US formats
+        // For better distribution, use CN format for first half, US for second half
+        int cnCount = totalCount / 2;
+        int usCount = totalCount - cnCount;
+        
+        System.out.println("========================================");
+        System.out.println("Creating " + totalCount + " test users:");
+        System.out.println("  - Chinese format: " + cnCount + " users");
+        System.out.println("  - US format: " + usCount + " users");
+        System.out.println("========================================");
+        
+        // Create users with Chinese mobile numbers
+        if (cnCount > 0) {
+            System.out.println("Creating " + cnCount + " users with Chinese phone numbers...");
+            createCNPhone(cnCount);
+        }
+        
+        // Create users with US mobile numbers
+        if (usCount > 0) {
+            System.out.println("Creating " + usCount + " users with US phone numbers...");
+            createUSPhone(usCount);
+        }
+        
+        System.out.println("========================================");
         System.out.println("User creation completed!");
+        System.out.println("Total users created: " + totalCount);
+        System.out.println("Config file: /Users/heather/Desktop/config.txt");
+        System.out.println("========================================");
     }
 }
